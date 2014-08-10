@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "skateboard": "^0.2.9"
+  },
+  "devDependencies": {
+    "beefy": "^2.1.0",
+    "browserify": "^5.9.1",
+    "tape": "^2.14.0"
+  }
+}
