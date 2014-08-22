@@ -113,7 +113,7 @@ function createClient(stream, fn) {
       }
     });
 
-    fn(null, methods);
+    fn(null, commands);
   });
 }
 
