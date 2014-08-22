@@ -50,12 +50,13 @@ function shape() {
   return promise;
 }
 
-
-
-
 function createClient(stream, fn) {
 
   oce(stream, function(e, methods) {
+    if (e) {
+      return fn(e);
+    }
+
     var commands = {};
 
     Object.keys(methods).forEach(function (method) {
@@ -112,13 +113,7 @@ function createClient(stream, fn) {
       }
     });
 
-    var c = commands.cube(10);
-    var c2 = c.translate(10, 10, 10);
-    var c3 = c2.rotate(45, 0, 0);
-
-    commands.stl('test.stl', c, c2, c3, function() {
-      console.log('here!');
-    });
+    fn(null, methods);
   });
 }
 
