@@ -7,12 +7,16 @@ if (!argv.oce) {
   return console.log('usage: livecad --oce=/path/to/net-oce');
 }
 
+var port = process.env.PORT || 9971;
+
 skateboard({
-  port : 9971,
+  port : port,
   dir: path.join(__dirname, 'static')
 }, function(stream) {
 
   var oce = spawn(path.resolve(process.cwd(), argv.oce), [], { stdio: 'pipe' });
   stream.pipe(oce.stdin);
   oce.stdout.pipe(stream);
-})
+});
+
+console.log("http://localhost:%s/", port)
