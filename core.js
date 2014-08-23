@@ -57,8 +57,10 @@ function shape() {
 
     if (typeof err === 'function') {
       if (!resolved) {
+        console.log('add watcher', err.name)
         watchers.push(err);
       } else {
+        console.log('already resolved!')
         err(null, value);
       }
     } else {
@@ -76,6 +78,7 @@ function shape() {
     (function(method) {
       promise[method.name] = function() {
         var args = [];
+        console.log('shape method %s: ', method.name, arguments);
         Array.prototype.push.apply(args, arguments);
         var s = shape();
 
