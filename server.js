@@ -15,9 +15,16 @@ skateboard({
 }, function(stream) {
 
   var oce = spawn(path.resolve(process.cwd(), argv.oce), [], { stdio: 'pipe' });
+
+  var ended = false;
+  stream.on('end', function() {
+    ended = true;
+  });
+
   oce.on('exit', function() {
-    console.log('OCE DIED!!!!')
-  })
+    !ended && console.log('OCE DIED!!!!')
+  });
+
   oce.stderr.pipe(process.stderr);
 
   stream.pipe(oce.stdin);

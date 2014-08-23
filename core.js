@@ -7,9 +7,11 @@ var oce = require('net-oce-protocol');
 
 module.exports = createClient;
 
+function noop() { console.log('NOOP', arguments); }
+
 function waitForArgs(args, fn) {
   if (!args || !args.length) {
-    fn(null, args);
+    return fn(null, args);
   }
 
   var resolved = Array(args.length);
@@ -18,7 +20,6 @@ function waitForArgs(args, fn) {
   args.forEach(function(arg, i) {
     if (typeof arg === 'function') {
       arg(function waitForArgsListener(e, r) {
-        console.log('in here...')
         // TODO: don't throw!
         if (e) {
           throw e;
@@ -56,10 +57,8 @@ function shape() {
 
     if (typeof err === 'function') {
       if (!resolved) {
-        console.log('add watcher', err.name)
         watchers.push(err);
       } else {
-        console.log('already resolved!')
         err(null, value);
       }
     } else {
@@ -77,17 +76,13 @@ function shape() {
     (function(method) {
       promise[method.name] = function() {
         var args = [];
-        console.log('shape method %s: ', method.name, arguments);
         Array.prototype.push.apply(args, arguments);
         var s = shape();
 
         waitForArgs(args, function(e, resolvedArgs) {
-          console.log('resolved args', resolvedArgs);
           promise(function(e, result) {
             if (e) throw e;
             resolvedArgs.unshift(result);
-            console.log('calling', method.name, ' w/ ', resolvedArgs);
-
             method.fn(resolvedArgs, s);
           });
         });
@@ -139,8 +134,27 @@ function createClient(stream, fn) {
           }
 
           waitForArgs(args, function(e, r) {
-            console.log('wait for args worked!')
-            methods[method](r, fn);
+            methods[method](r, fn || noop);
+          });
+        };
+      } else if (system === 'state') {
+        commands[name] = function(a, fn) {
+
+          var args;
+          if (typeof a === 'function' && !fn) {
+            return methods[method](null, function() {
+              a.apply(null, arguments);
+            })
+          } else if (!Array.isArray(a)) {
+            args = [];
+            Array.prototype.push.apply(args, arguments);
+            fn = args.pop();
+          } else {
+            args = a;
+          }
+
+          waitForArgs(args, function(e, r) {
+            methods[method](r, fn || noop);
           });
         };
       }
@@ -149,27 +163,3 @@ function createClient(stream, fn) {
     fn(null, commands);
   });
 }
-
-
-
-/*
-var c = cube(10)
-translate(c, 5, 5, 5);
-rotate(c, 0, 45, 0);
-cut(c, cube(10))
-
-cube(10).translate(5, 5, 5).rotate(0, 45, 0).cutWith(cube(10)).export_stl('test.stl');
-
-
-
-var cubes = [];
-for (var i=0; i<80; i++) {
-  var r = i/80 * (Math.PI * 2);
-  cubes.push(cube(1).rotate(0, 45, 0).translate(Math.sin(r), Math.cos(r), 0));
-}
-
-export_stl('cubes.stl', cubes)
-
-*/
-
-
