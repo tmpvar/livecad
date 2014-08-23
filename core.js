@@ -7,8 +7,44 @@ var oce = require('net-oce-protocol');
 
 module.exports = createClient;
 
-var shapeMethods = [];
+function waitForArgs(args, fn) {
+  if (!args || !args.length) {
+    fn(null, args);
+  }
 
+  var resolved = Array(args.length);
+
+  var pending = args.length;
+  args.forEach(function(arg, i) {
+    if (typeof arg === 'function') {
+      arg(function waitForArgsListener(e, r) {
+        console.log('in here...')
+        // TODO: don't throw!
+        if (e) {
+          throw e;
+        }
+
+        resolved[i] = r;
+
+        pending--;
+        if (pending <= 0) {
+          fn(null, resolved);
+        }
+      })
+    } else {
+      resolved[i] = args[i]
+      pending--;
+    }
+  });
+
+  // if we fell through immediately
+  if (!pending) {
+    fn(null, args);
+  }
+}
+
+var shapeMethods = [];
+var realized = 0;
 // TODO: error handling
 function shape() {
 
@@ -20,14 +56,20 @@ function shape() {
 
     if (typeof err === 'function') {
       if (!resolved) {
+        console.log('add watcher', err.name)
         watchers.push(err);
+      } else {
+        console.log('already resolved!')
+        err(null, value);
       }
     } else {
-      resolved = true;
-      value = val;
-      for (var i=0; i<watchers.length; i++) {
-        watchers[i](err, val);
-      }
+      process.nextTick(function() {
+        resolved = true;
+        value = val;
+        for (var i=0; i<watchers.length; i++) {
+          watchers[i](err, val);
+        }
+      });
     }
   }
 
@@ -35,11 +77,19 @@ function shape() {
     (function(method) {
       promise[method.name] = function() {
         var args = [];
+        console.log('shape method %s: ', method.name, arguments);
         Array.prototype.push.apply(args, arguments);
         var s = shape();
-        promise(function(e, result) {
-          args.push(result);
-          method.fn(args, s);
+
+        waitForArgs(args, function(e, resolvedArgs) {
+          console.log('resolved args', resolvedArgs);
+          promise(function(e, result) {
+            if (e) throw e;
+            resolvedArgs.unshift(result);
+            console.log('calling', method.name, ' w/ ', resolvedArgs);
+
+            method.fn(resolvedArgs, s);
+          });
         });
 
         return s;
@@ -88,27 +138,10 @@ function createClient(stream, fn) {
             args = a;
           }
 
-          var remaining = args.length;
-          var results = Array(remaining);
-          function attemptTrigger() {
-            if (remaining <= 0) {
-              methods[method](results, fn);
-            }
-          }
-
-          args.forEach(function(a, i) {
-            if (typeof a === 'function') {
-              a(function(e, r) {
-                remaining--;
-                results[i] = r;
-                attemptTrigger();
-              });
-            } else {
-              remaining--;
-              results[i] = a;
-              attemptTrigger();
-            }
-          })
+          waitForArgs(args, function(e, r) {
+            console.log('wait for args worked!')
+            methods[method](r, fn);
+          });
         };
       }
     });
