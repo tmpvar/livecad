@@ -6,6 +6,7 @@
   line-height:1.5em !important;
   height:100%;
   border-right: .4em solid rgba(39, 40, 34, 0);
+  min-width: 5em;
 }
 .CodeMirror-scroll {
   /* Set scrolling behaviour here */
