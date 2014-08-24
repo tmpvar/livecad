@@ -1,7 +1,7 @@
 node_modules
 bundle.js
-*.stl
-*.step
 *.st
 *.stl
+*.step
+*.log
 static/bundle.js
