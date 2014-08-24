@@ -14,7 +14,8 @@ require('domready')(function() {
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: ["step('cylcut.step'"
+    value: ["step("
+      , "  'cylcut.step'"
       , ", cube(50).cut(cylinder(10, 50).translate(10, 0, 0))"
       , ", function() { console.log('ok!') }"
       , ");"].join('\n')
