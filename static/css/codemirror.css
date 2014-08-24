@@ -180,9 +180,9 @@ div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
 
 /* Theme based on Sublime Text's Monokai theme */
 
-.CodeMirror { background: rgba(39, 40, 34, .6); color: #f8f8f2; resize: horizontal; }
+.CodeMirror { background: rgba(39, 40, 34, .66); color: #f8f8f2; resize: horizontal; }
 .CodeMirror div.CodeMirror-selected { background: #49483e; }
-.CodeMirror .CodeMirror-gutters { background: #373833; border-right: 0px; }
+.CodeMirror .CodeMirror-gutters { background: rgba(39, 40, 34, .33); border-right: 0px; }
 .CodeMirror .CodeMirror-guttermarker { color: white; }
 .CodeMirror .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
 .CodeMirror .CodeMirror-linenumber { color: #d0d0d0; }
