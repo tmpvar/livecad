@@ -3,15 +3,13 @@
   <title>livecad</title>
 
   <link rel="stylesheet" type="text/css" href="css/codemirror.css">
+  <link rel="stylesheet" type="text/css" href="css/monokai.css">
   <style type="text/css">
     body { margin: 0; padding: 0; }
 
     html, body, #editor, #output { height: 100%; }
 
-    #editor {
-      width: 50%;
-      border: 1px solid #ccc;
-    }
+    #editor { width: 50%; }
 
     #output {
       width: 50%;
@@ -27,9 +25,7 @@
     .left, .right { height: 100%; overflow: visible; display: block; float: left; position: relative; width: 50%; }
     .right { background: #eee; }
     /* codemirror */
-    .CodeMirror { font-size:20px; }
-
-    @media all and (max-width: 800px) { .CodeMirror { font-size: 14px !important; } }
+    .CodeMirror { font-size: 14px; }
 
     #editor .CodeMirror .errorLine { background: rgba(255,0,0,0.25); }
 

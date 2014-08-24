@@ -17,9 +17,6 @@ require('domready')(function() {
     value: "step('cylcut.step', cube(50).cut(cylinder(10, 50).translate(10, 0, 0)), function() { console.log('ok!') });",
   });
 
-  // fight with javascript-editor to override theme
-  jse.editor.setOption("theme", 'monakai')
-
   // Hack around protocol-buffers and their magical
   // function generation.
   window.Buffer = Buffer;
