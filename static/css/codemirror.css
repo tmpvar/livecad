@@ -2,7 +2,7 @@
 
 .CodeMirror {
   /* Set height, width, borders, and global font properties here */
-  font-family:'Source Code Pro', 'Monaco', 'Consolas', monospace;
+  font-family: 'Inconsolata', 'Source Code Pro', 'Monaco', 'Consolas', monospace;
   line-height:1.5em !important;
   height:100%;
   font-size:1em;
