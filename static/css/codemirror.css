@@ -63,30 +63,13 @@
 .CodeMirror div.CodeMirror-cursor.CodeMirror-overwrite {}
 
 /* DEFAULT THEME */
-
-.cm-s-default .cm-keyword {color: #708;}
-.cm-s-default .cm-atom {color: #219;}
-.cm-s-default .cm-number {color: #164;}
-.cm-s-default .cm-def {color: #00f;}
-.cm-s-default .cm-variable {color: black;}
-.cm-s-default .cm-variable-2 {color: #05a;}
-.cm-s-default .cm-variable-3 {color: #085;}
-.cm-s-default .cm-property {color: black;}
 .cm-s-default .cm-operator {color: black;}
-.cm-s-default .cm-comment {color: #a50;}
-.cm-s-default .cm-string {color: #a11;}
-.cm-s-default .cm-string-2 {color: #f50;}
 .cm-s-default .cm-meta {color: #555;}
-.cm-s-default .cm-error {color: #f00;}
 .cm-s-default .cm-qualifier {color: #555;}
 .cm-s-default .cm-builtin {color: #30a;}
-.cm-s-default .cm-bracket {color: #997;}
-.cm-s-default .cm-tag {color: #170;}
-.cm-s-default .cm-attribute {color: #00c;}
 .cm-s-default .cm-header {color: blue;}
 .cm-s-default .cm-quote {color: #090;}
 .cm-s-default .cm-hr {color: #999;}
-.cm-s-default .cm-link {color: #00c;}
 
 .cm-negative {color: #d44;}
 .cm-positive {color: #292;}
@@ -97,7 +80,6 @@
 .cm-invalidchar {color: #f00;}
 
 div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
-div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 
 /* STOP */
 
@@ -165,9 +147,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   z-index: 4;
 }
 
-.CodeMirror-lines {
-  cursor: text;
-}
+.CodeMirror-lines { cursor: text; }
 .CodeMirror pre {
   /* Reset some styles that the rest of the page might have set */
   -moz-border-radius: 0; -webkit-border-radius: 0; -o-border-radius: 0; border-radius: 0;
@@ -184,63 +164,58 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   position: relative;
   overflow: visible;
 }
-.CodeMirror-wrap pre {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  word-break: normal;
-}
-.CodeMirror-linebackground {
-  position: absolute;
-  left: 0; right: 0; top: 0; bottom: 0;
-  z-index: 0;
-}
+.CodeMirror-wrap pre { word-wrap: break-word; white-space: pre-wrap; word-break: normal; }
+.CodeMirror-linebackground { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 0; }
+.CodeMirror-linewidget { position: relative; z-index: 2; overflow: auto; }
+.CodeMirror-widget { display: inline-block; }
+.CodeMirror-wrap .CodeMirror-scroll { overflow-x: hidden; }
 
-.CodeMirror-linewidget {
-  position: relative;
-  z-index: 2;
-  overflow: auto;
-}
-
-.CodeMirror-widget {
-  display: inline-block;
-}
-
-.CodeMirror-wrap .CodeMirror-scroll {
-  overflow-x: hidden;
-}
-
-.CodeMirror-measure {
-  position: absolute;
-  width: 100%; height: 0px;
-  overflow: hidden;
-  visibility: hidden;
-}
+.CodeMirror-measure { position: absolute; width: 100%; height: 0px; overflow: hidden; visibility: hidden; }
 .CodeMirror-measure pre { position: static; }
+.CodeMirror div.CodeMirror-cursor { position: absolute; visibility: hidden; border-right: none; width: 0; }
+.CodeMirror-focused div.CodeMirror-cursor { visibility: visible; }
 
-.CodeMirror div.CodeMirror-cursor {
-  position: absolute;
-  visibility: hidden;
-  border-right: none;
-  width: 0;
-}
-.CodeMirror-focused div.CodeMirror-cursor {
-  visibility: visible;
-}
+.cm-searching { background: #ffa; background: rgba(255, 255, 0, .4); }
 
-.CodeMirror-selected { background: #d9d9d9; }
-.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+/* Theme based on Sublime Text's Monokai theme */
 
-.cm-searching {
-  background: #ffa;
-  background: rgba(255, 255, 0, .4);
-}
+.CodeMirror { background: rgba(39, 40, 34, .6); color: #f8f8f2; resize: horizontal; }
+.CodeMirror div.CodeMirror-selected { background: #49483e; }
+.CodeMirror .CodeMirror-gutters { background: #373833; border-right: 0px; }
+.CodeMirror .CodeMirror-guttermarker { color: white; }
+.CodeMirror .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
+.CodeMirror .CodeMirror-linenumber { color: #d0d0d0; }
+.CodeMirror .CodeMirror-cursor { border-left: 1px solid #f8f8f0 !important; }
 
 /* IE7 hack to prevent it from returning funny offsetTops on the spans */
 .CodeMirror span { *vertical-align: text-bottom; }
 
-@media print {
-  /* Hide the cursor when printing */
-  .CodeMirror div.CodeMirror-cursor {
-    visibility: hidden;
-  }
-}
+.CodeMirror .cm-comment { color: #75715e; }
+.CodeMirror .cm-atom { color: #ae81ff; }
+.CodeMirror .cm-number { color: #ae81ff; }
+
+.CodeMirror .cm-property, .cm-s-monokai span.cm-attribute { color: #a6e22e; }
+.CodeMirror .cm-keyword { color: #f92672; }
+.CodeMirror .cm-string { color: #e6db74; }
+
+/* default style not set by theme */ 
+.CodeMirror .cm-string-2 {color: #f50;} 
+
+.CodeMirror .cm-variable { color: #a6e22e; }
+.CodeMirror .cm-variable-2 { color: #9effff; }
+
+/* default style not set by theme */ 
+.CodeMirror .cm-variable-3 {color: #085;} 
+
+.CodeMirror .cm-def { color: #fd971f; }
+.CodeMirror .cm-bracket { color: #f8f8f2; }
+.CodeMirror .cm-tag { color: #f92672; }
+.CodeMirror .cm-link { color: #ae81ff; }
+.CodeMirror .cm-error { background: #f92672; color: #f8f8f0; }
+
+.CodeMirror .CodeMirror-activeline-background { background: #373831;}
+.CodeMirror .CodeMirror-matchingbracket { text-decoration: underline; color: white; }
+.CodeMirror .CodeMirror-nonmatchingbracket { color: #f22; }
+
+/* Hide the cursor when printing */
+@media print { .CodeMirror div.CodeMirror-cursor { visibility: hidden; } }
