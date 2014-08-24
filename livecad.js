@@ -7,7 +7,6 @@ var createProgram = glslify({
   vertex: "./static/shaders/basic.vert"
 });
 
-
 var createClient = require('./core');
 
 require('domready')(function() {
@@ -15,12 +14,11 @@ require('domready')(function() {
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: "// hello world\n",
+    value: "step('cylcut.step', cube(50).cut(cylinder(10, 50).translate(10, 0, 0)), function() { console.log('ok!') });",
   });
 
   // fight with javascript-editor to override theme
   jse.editor.setOption("theme", 'monakai')
-
 
   // Hack around protocol-buffers and their magical
   // function generation.
@@ -33,24 +31,25 @@ require('domready')(function() {
       window.location.reload();
     });
 
-
-
     createClient(stream, function(err, methods) {
-
-
       var header = Object.keys(methods).map(function(name) {
         return 'var ' + name + ' = ' + 'ops.' + name + ';';
       });
 
+      function evaluate() {
+        methods.reset(function() {
+          var fn = new Function('ops', header.join('\n') + '\n' + jse.getValue());
+          fn(methods);
+        });
+      }
+
+      evaluate();
 
       jse.on('valid', function(valid) {
         if (valid) {
-          var fn = new Function('ops', header.join('\n') + '\n' + jse.getValue());
-          fn(methods);
+          evaluate();
         }
       });
-
-
 
       window.methods = methods;
     });

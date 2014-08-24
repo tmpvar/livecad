@@ -7,8 +7,45 @@ var oce = require('net-oce-protocol');
 
 module.exports = createClient;
 
-var shapeMethods = [];
+function noop() { console.log('NOOP', arguments); }
 
+function waitForArgs(args, fn) {
+  if (!args || !args.length) {
+    return fn(null, args);
+  }
+
+  var resolved = Array(args.length);
+
+  var pending = args.length;
+  args.forEach(function(arg, i) {
+    if (typeof arg === 'function') {
+      arg(function waitForArgsListener(e, r) {
+        // TODO: don't throw!
+        if (e) {
+          throw e;
+        }
+
+        resolved[i] = r;
+
+        pending--;
+        if (pending <= 0) {
+          fn(null, resolved);
+        }
+      })
+    } else {
+      resolved[i] = args[i]
+      pending--;
+    }
+  });
+
+  // if we fell through immediately
+  if (!pending) {
+    fn(null, args);
+  }
+}
+
+var shapeMethods = [];
+var realized = 0;
 // TODO: error handling
 function shape() {
 
@@ -21,13 +58,17 @@ function shape() {
     if (typeof err === 'function') {
       if (!resolved) {
         watchers.push(err);
+      } else {
+        err(null, value);
       }
     } else {
-      resolved = true;
-      value = val;
-      for (var i=0; i<watchers.length; i++) {
-        watchers[i](err, val);
-      }
+      process.nextTick(function() {
+        resolved = true;
+        value = val;
+        for (var i=0; i<watchers.length; i++) {
+          watchers[i](err, val);
+        }
+      });
     }
   }
 
@@ -37,9 +78,13 @@ function shape() {
         var args = [];
         Array.prototype.push.apply(args, arguments);
         var s = shape();
-        promise(function(e, result) {
-          args.push(result);
-          method.fn(args, s);
+
+        waitForArgs(args, function(e, resolvedArgs) {
+          promise(function(e, result) {
+            if (e) throw e;
+            resolvedArgs.unshift(result);
+            method.fn(resolvedArgs, s);
+          });
         });
 
         return s;
@@ -88,27 +133,29 @@ function createClient(stream, fn) {
             args = a;
           }
 
-          var remaining = args.length;
-          var results = Array(remaining);
-          function attemptTrigger() {
-            if (remaining <= 0) {
-              methods[method](results, fn);
-            }
+          waitForArgs(args, function(e, r) {
+            methods[method](r, fn || noop);
+          });
+        };
+      } else if (system === 'state') {
+        commands[name] = function(a, fn) {
+
+          var args;
+          if (typeof a === 'function' && !fn) {
+            return methods[method](null, function() {
+              a.apply(null, arguments);
+            })
+          } else if (!Array.isArray(a)) {
+            args = [];
+            Array.prototype.push.apply(args, arguments);
+            fn = args.pop();
+          } else {
+            args = a;
           }
 
-          args.forEach(function(a, i) {
-            if (typeof a === 'function') {
-              a(function(e, r) {
-                remaining--;
-                results[i] = r;
-                attemptTrigger();
-              });
-            } else {
-              remaining--;
-              results[i] = a;
-              attemptTrigger();
-            }
-          })
+          waitForArgs(args, function(e, r) {
+            methods[method](r, fn || noop);
+          });
         };
       }
     });
@@ -116,27 +163,3 @@ function createClient(stream, fn) {
     fn(null, commands);
   });
 }
-
-
-
-/*
-var c = cube(10)
-translate(c, 5, 5, 5);
-rotate(c, 0, 45, 0);
-cut(c, cube(10))
-
-cube(10).translate(5, 5, 5).rotate(0, 45, 0).cutWith(cube(10)).export_stl('test.stl');
-
-
-
-var cubes = [];
-for (var i=0; i<80; i++) {
-  var r = i/80 * (Math.PI * 2);
-  cubes.push(cube(1).rotate(0, 45, 0).translate(Math.sin(r), Math.cos(r), 0));
-}
-
-export_stl('cubes.stl', cubes)
-
-*/
-
-
