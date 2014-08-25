@@ -25,7 +25,12 @@ skateboard({
     !ended && console.log('OCE DIED!!!!')
   });
 
-  oce.stderr.pipe(process.stderr);
+  oce.stderr.on('data', function(d) {
+    d.toString().split('\n').forEach(function(line) {
+      console.log('>', line);
+    });
+  });
+
 
   stream.pipe(oce.stdin);
   oce.stdout.pipe(stream);

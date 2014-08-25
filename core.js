@@ -122,40 +122,39 @@ function createClient(stream, fn) {
           methods[method](args, p);
           return p;
         };
-      } else if (system === 'export') {
-        commands[name] = function(a, fn) {
-          var args;
-          if (!Array.isArray(a)) {
-            args = [];
-            Array.prototype.push.apply(args, arguments);
-            fn = args.pop();
-          } else {
-            args = a;
-          }
-
-          waitForArgs(args, function(e, r) {
-            methods[method](r, fn || noop);
-          });
-        };
-      } else if (system === 'state') {
+      } else { // state, extract, export, etc..
         commands[name] = function(a, fn) {
 
           var args;
-          if (typeof a === 'function' && !fn) {
+          if (typeof a === 'function' && a.name !== 'promise' && !fn) {
             return methods[method](null, function() {
               a.apply(null, arguments);
             })
           } else if (!Array.isArray(a)) {
             args = [];
             Array.prototype.push.apply(args, arguments);
-            fn = args.pop();
+            if (args.length > 1) {
+              fn = args.pop();
+            } else {
+              fn = function(e, r) {
+
+                // TODO: this is where we could do interesting stuff
+                //       around auto-rendering and similar.
+                console.warn(name, 'resulted in', r);
+              }
+            }
           } else {
             args = a;
           }
 
+          var p = shape();
           waitForArgs(args, function(e, r) {
-            methods[method](r, fn || noop);
+            methods[method](r, p);
           });
+
+          p(fn || noop);
+
+          return p;
         };
       }
     });

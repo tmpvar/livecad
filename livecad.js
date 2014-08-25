@@ -11,14 +11,12 @@ var createClient = require('./core');
 
 require('domready')(function() {
 
+  var renderMesh = require('./3d');
+
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: ["step("
-      , "  'cylcut.step'"
-      , ", cube(50).cut(cylinder(10, 50).translate(10, 0, 0))"
-      , ", function() { console.log('ok!') }"
-      , ");"].join('\n')
+    value: "verts(cube(50).cut(cylinder(10, 50).translate(10, 0, 0)))"
   });
 
   // Hack around protocol-buffers and their magical
@@ -36,6 +34,17 @@ require('domready')(function() {
       var header = Object.keys(methods).map(function(name) {
         return 'var ' + name + ' = ' + 'ops.' + name + ';';
       });
+
+
+      // hijack extract_verts
+      var _verts = methods.verts;
+      methods.verts = function() {
+        var p = _verts.apply(null, arguments)
+        p(function(e, r) {
+          renderMesh(e, r[0], r[1]);
+        });
+        return p;
+      };
 
       function evaluate() {
         methods.reset(function() {
