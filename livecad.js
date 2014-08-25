@@ -41,7 +41,7 @@ require('domready')(function() {
       methods.verts = function() {
         var p = _verts.apply(null, arguments)
         p(function(e, r) {
-          renderMesh(e, r[0], r[1]);
+          renderMesh(e, r);
         });
         return p;
       };

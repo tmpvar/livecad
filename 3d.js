@@ -1,6 +1,11 @@
 var createBuffer = require('gl-buffer');
 var glslify = require('glslify');
 var createVAO = require('gl-vao');
+var simple3DShader = require("simple-3d-shader")
+var createOrbitCamera = require("orbit-camera")
+var glm = require("gl-matrix")
+var mat4 = glm.mat4
+
 
 module.exports = setMesh
 
@@ -12,16 +17,19 @@ var shell = require("gl-now")({
 
 
 var buffer, totalVerts = 0, vao;
-function setMesh(e, b, count) {
+function setMesh(e, b) {
   var gl = shell.gl;
   // debugger;
   //Create buffer
-  var buf = new Float32Array(b.buffer.slice(31));
 
-console.log(buf);
+  // TODO: this cannot be right..
+  console.log(b.buffer.byteLength)
+  var buf = new Float32Array(b.buffer.slice(14));
+console.log(buf.length)
+  totalVerts = buf.length/3;
+
   if (!buffer) {
     buffer = createBuffer(gl, buf)
-    totalVerts = count;
 
     vao = createVAO(gl, [{
         "buffer": buffer,
@@ -59,13 +67,17 @@ var createShader = glslify({
   inline: true
 })
 
+var camera = createOrbitCamera([0, 200, 200],
+                               [0, 0, 0],
+                               [0, 1, 0])
+
 var shader;
 
 shell.on("gl-init", function() {
   var gl = shell.gl
 
   //Create shader
-  shader = createShader(gl)
+  shader = simple3DShader(shell.gl)
   shader.attributes.position.location = 0;
   shader.attributes.color.location = 1;
 })
@@ -77,7 +89,13 @@ shell.on("gl-render", function(t) {
   if (buffer && shader) {
     shader.bind()
 
-    shader.attributes.tick = (Date.now()-start) / -1000;
+    var scratch = mat4.create()
+    shader.uniforms.model = scratch
+    shader.uniforms.projection = mat4.perspective(scratch, Math.PI/4.0, shell.width/shell.height, 0.1, 1000.0)
+    shader.uniforms.view = camera.view(scratch)
+
+
+
     vao.bind();
     vao.draw(gl.TRIANGLES, totalVerts);
     vao.unbind();
@@ -85,6 +103,22 @@ shell.on("gl-render", function(t) {
     // TODO: render interesting placeholder.. dust motes or something ;)
   }
 })
+
+shell.on("tick", function() {
+  if(shell.wasDown("mouse-left")) {
+    camera.rotate([shell.mouseX/shell.width-0.5, shell.mouseY/shell.height-0.5],
+                  [shell.prevMouseX/shell.width-0.5, shell.prevMouseY/shell.height-0.5])
+  }
+  if(shell.wasDown("mouse-right")) {
+    camera.pan([10*(shell.mouseX-shell.prevMouseX)/shell.width,
+                10*(shell.mouseY - shell.prevMouseY)/shell.height])
+  }
+  if(shell.scroll[1]) {
+    console.log('scrolling');
+    camera.zoom(shell.scroll[1] * 0.1)
+  }
+})
+
 
 shell.on("gl-error", function(e) {
   throw new Error("WebGL not supported :(")
