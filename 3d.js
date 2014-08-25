@@ -19,29 +19,33 @@ var shell = require("gl-now")({
 var buffer, totalVerts = 0, vao;
 function setMesh(e, b) {
   var gl = shell.gl;
-  // debugger;
   //Create buffer
 
   // TODO: this cannot be right..
-  console.log(b.buffer.byteLength)
   var buf = new Float32Array(b.buffer.slice(14));
-console.log(buf.length)
   totalVerts = buf.length/3;
 
   if (!buffer) {
     buffer = createBuffer(gl, buf)
 
     vao = createVAO(gl, [{
-        "buffer": buffer,
-        "type": gl.FLOAT,
-        "size": 3
+        buffer: buffer,
+        type: gl.FLOAT,
+        size: 3
       },
       [0.8, 1, 0.5]
     ]);
 
   } else {
     buffer.update(buf);
-    throw new Error('implement me...')
+    vao.update([
+      {
+        buffer: buffer,
+        type: gl.FLOAT,
+        size: 3
+      },
+      [0.8, 1, 0.5]
+    ])
   }
 }
 
@@ -80,6 +84,10 @@ shell.on("gl-init", function() {
   shader = simple3DShader(shell.gl)
   shader.attributes.position.location = 0;
   shader.attributes.color.location = 1;
+
+  ['mousedown', 'click', 'mouseup', 'mousemove', 'mousewheel'].forEach(function(name) {
+    document.querySelector('canvas').addEventListener(name, function(ev) { ev.preventDefault(); }, true)
+  });
 })
 
 var start = Date.now();
@@ -114,10 +122,10 @@ shell.on("tick", function() {
                 10*(shell.mouseY - shell.prevMouseY)/shell.height])
   }
   if(shell.scroll[1]) {
-    console.log('scrolling');
     camera.zoom(shell.scroll[1] * 0.1)
   }
 })
+
 
 
 shell.on("gl-error", function(e) {

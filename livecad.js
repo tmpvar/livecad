@@ -16,7 +16,35 @@ require('domready')(function() {
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: "verts(cube(50).cut(cylinder(10, 50).translate(10, 0, 0)))"
+    value: [
+  'var distanceBetweenHoles = 31;',
+  'var centerCircleDiameter = 22;',
+  'var dimension = 42; // width and height',
+  'var materialWidth = 3;',
+  '',
+  '// compute hole pattern',
+  'var triLeg = distanceBetweenHoles/2;',
+  'var l = Math.sqrt(triLeg*triLeg*2);',
+  '',
+  'var b = box(dimension, materialWidth, dimension);',
+  'b = b.cut(cylinder(centerCircleDiameter/2, materialWidth));',
+  '',
+  'var TAU = Math.PI*2;',
+  'var a45 = Math.PI/4;',
+  'var a90 = Math.PI/2',
+  '',
+  'for (var i=1; i<=4; i++) {',
+  '  var c = cylinder(1.5, materialWidth).translate(',
+  '    l * Math.sin(i * a90 + a45),',
+  '    0,',
+  '    l * Math.cos(i * a90 + a45)',
+  '  );',
+  '',
+  '  b = b.cut(c)',
+  '}',
+  '',
+  'verts(b)'
+].join('\n')
   });
 
   // Hack around protocol-buffers and their magical
