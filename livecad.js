@@ -44,7 +44,7 @@ require('domready')(function() {
   '  b = b.cut(c)',
   '}',
   '',
-  'verts(b)'
+  'display(b)'
 ].join('\n')
   });
 
@@ -66,9 +66,9 @@ require('domready')(function() {
 
 
       // hijack extract_verts
-      var _verts = methods.verts;
-      methods.verts = function() {
-        var p = _verts.apply(null, arguments)
+      var _display = methods.display;
+      methods.display = function() {
+        var p = _display.apply(null, arguments)
         p(function(e, r) {
           renderMesh(e, r);
         });
