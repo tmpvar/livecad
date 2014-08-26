@@ -1,6 +1,7 @@
 var glnow = require('gl-now');
 var glslify = require('glslify');
 var skateboard = require('skateboard');
+var generate = require('generate-function');
 
 var createProgram = glslify({
   fragment: "./static/shaders/basic.frag",
@@ -73,20 +74,18 @@ require('domready')(function() {
         });
         return p;
       };
-
-      function evaluate() {
-        methods.reset(function() {
-          var fn = new Function('ops', header.join('\n') + '\n' + jse.getValue());
-          fn(methods);
-        });
+      function evil () {
+        generate()
+          ('function(){')
+            (header.join('\n'))
+            (jse.getValue())
+          ('}').toFunction({ops:methods})()
       }
 
-      evaluate();
+      evil()
 
       jse.on('valid', function(valid) {
-        if (valid) {
-          evaluate();
-        }
+        if (valid) methods.reset(evil);
       });
 
       window.methods = methods;
