@@ -1,7 +1,5 @@
 var createBuffer = require('gl-buffer');
 var glslify = require('glslify');
-var createVAO = require('gl-vao');
-var simple3DShader = require("simple-3d-shader")
 var createOrbitCamera = require("orbit-camera")
 var glm = require("gl-matrix")
 var mat4 = glm.mat4
@@ -20,52 +18,21 @@ var buffer, totalVerts = 0, vao;
 function setMesh(e, b) {
   var gl = shell.gl;
   //Create buffer
-  totalVerts = b.byteLength/4/3;
+  totalVerts = (b[0].byteLength/4)/3;
 
   if (!buffer) {
-    buffer = createBuffer(gl, b)
-
-    vao = createVAO(gl, [{
-        buffer: buffer,
-        type: gl.FLOAT,
-        size: 3
-      },
-      [0.8, 1, 0.5]
-    ]);
-
+    buffer = createBuffer(gl, b[0])
+    normal = createBuffer(gl, b[1])
   } else {
-    buffer.update(b);
-    vao.update([
-      {
-        buffer: buffer,
-        type: gl.FLOAT,
-        size: 3
-      },
-      [0.8, 1, 0.5]
-    ])
+    buffer.update(b[0]);
+    normal.update(b[1]);
   }
 }
 
 
 var createShader = glslify({
-  vertex: "\
-    attribute vec3 position;\
-    attribute vec3 color;\
-    varying vec3 fragColor;\
-    attribute float tick;\
-    void main() {\
-      vec3 p = position; \
-      p.x = tick; \
-      gl_Position = vec4(p, 1.0);\
-      fragColor = color;\
-    }",
-  fragment: "\
-    precision highp float;\
-    varying vec3 fragColor;\
-    void main() {\
-      gl_FragColor = vec4(fragColor, 1.0);\
-    }",
-  inline: true
+  vertex: './static/shaders/basic.vert',
+  fragment: './static/shaders/basic.frag',
 })
 
 var camera = createOrbitCamera([0, 200, 200],
@@ -78,9 +45,10 @@ shell.on("gl-init", function() {
   var gl = shell.gl
 
   //Create shader
-  shader = simple3DShader(shell.gl)
+  shader = createShader(shell.gl)
   shader.attributes.position.location = 0;
-  shader.attributes.color.location = 1;
+  shader.attributes.normal.location = 1;
+
 
   ['mousedown', 'click', 'mouseup', 'mousemove', 'mousewheel'].forEach(function(name) {
     document.querySelector('canvas').addEventListener(name, function(ev) { ev.preventDefault(); }, true)
@@ -91,17 +59,21 @@ var start = Date.now();
 shell.on("gl-render", function(t) {
   var gl = shell.gl
 
+  gl.enable(gl.DEPTH_TEST)
+  gl.enable(gl.CULL_FACE)
+
   if (buffer && shader) {
     shader.bind()
-
+    buffer.bind();
+    shader.attributes.position.pointer();
+    shader.attributes.normal.pointer();
+    // shader.attributes.color = [1.0, 0, 1.0]
     var scratch = mat4.create()
     shader.uniforms.model = scratch
     shader.uniforms.projection = mat4.perspective(scratch, Math.PI/4.0, shell.width/shell.height, 0.1, 1000.0)
     shader.uniforms.view = camera.view(scratch)
 
-    vao.bind();
-    vao.draw(gl.TRIANGLES, totalVerts);
-    vao.unbind();
+    gl.drawArrays(gl.TRIANGLES, 0, totalVerts);
   } else {
     // TODO: render interesting placeholder.. dust motes or something ;)
   }

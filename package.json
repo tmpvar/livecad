@@ -14,12 +14,10 @@
     "gl-buffer": "^2.0.8",
     "gl-matrix": "^2.1.0",
     "gl-now": "^1.3.1",
-    "gl-vao": "^1.1.3",
     "javascript-editor": "^0.2.1",
     "net-oce-protocol": "git://github.com/solids/net-oce-protocol",
     "optimist": "^0.6.1",
     "orbit-camera": "^1.0.0",
-    "simple-3d-shader": "0.0.0",
     "skateboard": "^0.2.9"
   },
   "devDependencies": {
