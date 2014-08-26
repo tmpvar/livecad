@@ -34,7 +34,7 @@ function setMesh(e, b) {
     ]);
 
   } else {
-    buffer.update(buf);
+    buffer.update(b);
     vao.update([
       {
         buffer: buffer,
