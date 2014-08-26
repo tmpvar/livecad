@@ -20,13 +20,10 @@ var buffer, totalVerts = 0, vao;
 function setMesh(e, b) {
   var gl = shell.gl;
   //Create buffer
-
-  // TODO: this cannot be right..
-  var buf = new Float32Array(b.buffer.slice(14));
-  totalVerts = buf.length/3;
+  totalVerts = b.byteLength/4/3;
 
   if (!buffer) {
-    buffer = createBuffer(gl, buf)
+    buffer = createBuffer(gl, b)
 
     vao = createVAO(gl, [{
         buffer: buffer,
@@ -101,8 +98,6 @@ shell.on("gl-render", function(t) {
     shader.uniforms.model = scratch
     shader.uniforms.projection = mat4.perspective(scratch, Math.PI/4.0, shell.width/shell.height, 0.1, 1000.0)
     shader.uniforms.view = camera.view(scratch)
-
-
 
     vao.bind();
     vao.draw(gl.TRIANGLES, totalVerts);
