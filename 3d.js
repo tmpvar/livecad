@@ -47,7 +47,6 @@ var createShader = glslify({
 var camera = createOrbitCamera([0, 200, 200],
                                [0, 0, 0],
                                [0, 1, 0])
-
 var shader;
 
 shell.on("gl-init", function() {
@@ -91,7 +90,7 @@ shell.on("gl-render", function(t) {
     );
 
     shader.uniforms.view = camera.view(scratch)
-
+    shader.uniforms.eye = camera.center;
     mesh.bind();
     mesh.draw(gl.TRIANGLES, totalVerts/3)
     mesh.unbind();
