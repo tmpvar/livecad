@@ -11,7 +11,7 @@ var port = process.env.PORT || 9971;
 
 skateboard({
   port : port,
-  dir: path.join(__dirname, 'static')
+  dir: path.join(__dirname, 'dist')
 }, function(stream) {
 
   var oce = spawn(path.resolve(process.cwd(), argv.oce), [], { stdio: 'pipe' });

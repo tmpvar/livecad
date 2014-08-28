@@ -1,4 +1,5 @@
 var gulp = require('gulp')
+  , argv = require('minimist')(process.argv.slice(2))
   , paths = {
       allscripts: './**/*.js'
     , server: './server.js'
@@ -20,10 +21,8 @@ var gulp = require('gulp')
       }
     }
 
-var htmlmin = require('gulp-minify-html')
 gulp.task('html', function (cb) {
   return gulp.src(paths.frontend.html)
-    .pipe(htmlmin)
     .pipe(gulp.dest(paths.dist.main))
 })
 
@@ -43,10 +42,10 @@ gulp.task('styles', function (cb) {
 
 var browserify = require('gulp-browserify')
 gulp.task('scripts', function (cb) {
-  gulp.src(paths.frontend.scripts)
+  gulp.src(paths.frontend.scripts.main)
     .pipe(browserify({
       insertGlobals: true
-    , debug: !gulp.env.production
+    , debug: argv.debug
     }))
     .pipe(gulp.dest(paths.dist.bundle))
 })
@@ -57,16 +56,14 @@ gulp.task('resources', function (cb) {
 })
 
 var nodemon = require('gulp-nodemon')
-  , argv = require('minimist')(process.argv.slice(2))
 gulp.task('watch', function (cb) {
+  if (!argv.oce) throw console.error('Error: Please provide location of oce binary')
+  console.log(argv)
   gulp.watch(paths.frontend.html, ['html'])
   gulp.watch(paths.frontend.styles, ['styles'])
   gulp.watch(paths.frontend.scripts.dir, ['scripts'])
   gulp.watch(paths.frontend.resources, ['resources'])
-  nodemon({ 
-    script: paths.server 
-  , execMap: { js: "node --oce=" + argv.oce }
-  })
+  nodemon(paths.server + ' --oce=' + argv.oce)
 })
 
 // TODO: create full dist builds
