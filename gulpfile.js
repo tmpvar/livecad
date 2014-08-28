@@ -1,5 +1,4 @@
 var gulp = require('gulp')
-  , argv = require('minimist')(process.argv.slice(2))
   , paths = {
       allscripts: './**/*.js'
     , server: './server.js'
@@ -43,7 +42,7 @@ gulp.task('styles', function (cb) {
 })
 
 var browserify = require('gulp-browserify')
-gulp.task('scripts', ['lint'], function (cb) {
+gulp.task('scripts', function (cb) {
   gulp.src(paths.frontend.scripts)
     .pipe(browserify({
       insertGlobals: true
@@ -52,18 +51,25 @@ gulp.task('scripts', ['lint'], function (cb) {
     .pipe(gulp.dest(paths.dist.bundle))
 })
 
+gulp.task('resources', function (cb) {
+  gulp.src(paths.frontend.resources)
+    .pipe(gulp.dest(paths.dist.main))
+})
+
 var nodemon = require('gulp-nodemon')
+  , argv = require('minimist')(process.argv.slice(2))
 gulp.task('watch', function (cb) {
   gulp.watch(paths.frontend.html, ['html'])
   gulp.watch(paths.frontend.styles, ['styles'])
   gulp.watch(paths.frontend.scripts.dir, ['scripts'])
+  gulp.watch(paths.frontend.resources, ['resources'])
   nodemon({ 
     script: paths.server 
-  , nodeArgs: argv.oce
+  , execMap: { js: "node --oce=" + argv.oce }
   })
 })
 
 // TODO: create full dist builds
-gulp.task('build', ['html', 'styles', 'scripts'], function () {})
+gulp.task('build', ['html', 'styles', 'scripts', 'resources'], function () {})
 
 gulp.task('default', ['watch'])
