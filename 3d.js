@@ -5,6 +5,9 @@ var glm = require("gl-matrix");
 var mat4 = glm.mat4;
 var createVAO = require('gl-vao');
 
+var near = .1;
+var far = 1000;
+
 module.exports = setMesh;
 
 //Initialize shell
@@ -16,7 +19,7 @@ var shell = require("gl-now")({
 var mesh, buffers, totalVerts;
 function setMesh(e, b) {
   var gl = shell.gl;
-
+  far = b[2][5] - b[2][2];
   totalVerts = b[0].length;
   if (!buffers) {
     buffers = [
@@ -85,8 +88,8 @@ shell.on("gl-render", function(t) {
       scratch,
       Math.PI/4.0,
       shell.width/shell.height,
-      0.1,
-      1000.0
+      near,
+      far + camera.distance
     );
 
     shader.uniforms.view = camera.view(scratch)
