@@ -96,6 +96,12 @@
   .cm-error { background: #f92672; color: #f8f8f0; }
   .cm-invalidchar { color: #f00; }
 
+  &-linebackground.errorLine {
+    background: hsla(1, 74%, 52%, .1);
+    border: 1px solid hsla(1, 74%, 52%, .4);
+    width: 95%;
+  }
+
   //
   // GUTTER 
   //
