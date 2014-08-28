@@ -1,0 +1,11 @@
+// Inconsolata (c) Raph Levien under SIL Open Font License 1.1
+// http://levien.com/type/myfonts/inconsolata.html
+@font-face {
+  font-family: 'Inconsolata'; font-style: normal; font-weight: 400;
+  src: local('Inconsolata'), url(/fonts/inconsolata.woff) format('woff');
+}
+@font-face {
+  font-family: 'Inconsolata'; font-style: normal; font-weight: 700;
+  src: local('Inconsolata Bold'), local('Inconsolata-Bold')
+  , url(/fonts/inconsolata_bold.woff) format('woff');
+}
