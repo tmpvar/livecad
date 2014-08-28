@@ -4,3 +4,10 @@ body { overflow: hidden; } /* disable overscroll on osx */
 
 #editor { z-index: 1; width: 40em; }
 #output { background: linear-gradient(#3a8d7a, #111); }
+
+
+.errorLine.CodeMirror-linebackground {
+  background: hsla(1, 74%, 52%, .1);
+  border: 1px solid hsla(1, 74%, 52%, .4);
+  width: 95%;
+}
