@@ -5,3 +5,4 @@ bundle.js
 *.step
 *.log
 static/bundle.js
+*.brep
