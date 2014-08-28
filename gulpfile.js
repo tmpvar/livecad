@@ -1,28 +1,25 @@
 var gulp = require('gulp')
+  , util = require('gulp-util')
   , argv = require('minimist')(process.argv.slice(2))
   , paths = {
-      allscripts: './**/*.js'
+      allscripts: ['./**/*.js', '!./gulpfile.js']
     , server: './server.js'
+    , dist: './dist/'
     , frontend: {
         // html top level in directory only
         html: './frontend/*.html'
 
+      , resources: './frontend/resources/**/*'
+
         // sass and browserify handle includes for us
       , styles: './frontend/scss/main.scss'
-      , scripts: {
-          main:'./frontend/js/main.js' 
-        , dir: './frontend/js/**/*.js'
-        }
-      }
-    , dist: {
-        main: './dist/'
-      , bundle: './dist/bundle.js'
+      , scripts: './frontend/js/main.js' 
       }
     }
 
 gulp.task('html', function (cb) {
   return gulp.src(paths.frontend.html)
-    .pipe(gulp.dest(paths.dist.main))
+    .pipe(gulp.dest(paths.dist))
 })
 
 var sass = require('gulp-sass')
@@ -32,32 +29,33 @@ gulp.task('styles', function (cb) {
   return gulp.src(paths.frontend.styles)
     .pipe(sass({ errLogToConsole: true }))
     .pipe(prefix())
-    .pipe(cssmin())
-    .pipe(gulp.dest(paths.dist.main))
+    .pipe(argv.debug ? util.noop() : cssmin())
+    .pipe(gulp.dest(paths.dist))
 })
 
 var browserify = require('gulp-browserify')
+  , jsmin = require('gulp-uglify')
 gulp.task('scripts', function (cb) {
   gulp.src(paths.frontend.scripts.main)
-    .pipe(browserify({
-      insertGlobals: true
-    , debug: argv.debug
-    }))
-    .pipe(gulp.dest(paths.dist.bundle))
+    .pipe(browserify({ insertGlobals: true, debug: argv.debug }))
+    .pipe(argv.debug ? util.noop() : jsmin())
+    .pipe(gulp.dest(paths.dist))
 })
 
 gulp.task('resources', function (cb) {
   gulp.src(paths.frontend.resources)
-    .pipe(gulp.dest(paths.dist.main))
+    .pipe(gulp.dest(paths.dist))
 })
 
 var nodemon = require('gulp-nodemon')
 gulp.task('watch', function (cb) {
-  if (!argv.oce) throw console.error('Error: Please provide location of oce binary')
-  console.log(argv)
+  if (!argv.oce) throw console.error([
+      'Error: Please provide location of oce binary'
+    , 'Usage: "gulp --oce=path/to/oce"'
+    ].join('\n'))
   gulp.watch(paths.frontend.html, ['html'])
   gulp.watch(paths.frontend.styles, ['styles'])
-  gulp.watch(paths.frontend.scripts.dir, ['scripts'])
+  gulp.watch(paths.allscripts, ['scripts'])
   gulp.watch(paths.frontend.resources, ['resources'])
   nodemon(paths.server + ' --oce=' + argv.oce)
 })

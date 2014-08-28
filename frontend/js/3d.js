@@ -43,8 +43,8 @@ function setMesh(e, b) {
 
 
 var createShader = glslify({
-  vertex: './static/shaders/basic.vert',
-  fragment: './static/shaders/basic.frag',
+  vertex: '../resources/shaders/basic.vert',
+  fragment: '../resources/shaders/basic.frag',
 })
 
 var camera = createOrbitCamera([0, 200, 200],

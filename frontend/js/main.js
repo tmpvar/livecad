@@ -4,8 +4,8 @@ var skateboard = require('skateboard');
 var generate = require('generate-function');
 
 var createProgram = glslify({
-  fragment: "./static/shaders/basic.frag",
-  vertex: "./static/shaders/basic.vert"
+  fragment: "../resources/shaders/basic.frag",
+  vertex: "../resources/shaders/basic.vert"
 });
 
 var createClient = require('./core');
