@@ -44,9 +44,14 @@ require('domready')(function() {
   '  b = b.cut(c)',
   '}',
   '',
-  'display(b)'
+  'display(b)',
 ].join('\n')
   });
+
+  jse.editor.setCursor(0, 0);
+
+  // fix "cursor is off the end of the line on last line" issue #29
+  jse.editor.refresh();
 
   // Hack around protocol-buffers and their magical
   // function generation.
