@@ -1,5 +1,4 @@
 var gulp = require('gulp')
-  , debug = require('gulp-debug')
   , argv = require('minimist')(process.argv.slice(2))
   , paths = {
       allscripts: './**/*.js'
@@ -9,18 +8,14 @@ var gulp = require('gulp')
         html: './frontend/*.html'
 
         // sass and browserify handle includes for us
-      , styles: {
-          main: './frontend/scss/main.scss'
-        , dir: './frontend/scss'
-        }
+      , styles: './frontend/scss/main.scss'
       , scripts: {
           main:'./frontend/js/main.js' 
         , dir: './frontend/js/**/*.js'
         }
       }
     , dist: {
-        main: './dist/' // used for placing html files
-      , styles: './dist/style.css'
+        main: './dist/'
       , bundle: './dist/bundle.js'
       }
     }
@@ -34,21 +29,11 @@ var sass = require('gulp-sass')
   , prefix = require('gulp-autoprefixer')
   , cssmin = require('gulp-minify-css')
 gulp.task('styles', function (cb) {
-  return gulp.src(paths.frontend.styles.main)
-    // scss preprocessor
-    .pipe(sass({ 
-    //  sourceComments: 'map'
-      errLogToConsole: true 
-    , includePaths: [ paths.frontend.styles.dir ]
-    , onError: function (err) { console.log(err) }
-    , error: function (err) { console.log(err) }
-    , 
-    }))
-    // rule prefixer; works with source maps
-    //.pipe(prefix())
-    // minify; *hopefully* doesn't kill source maps
-    //.pipe(cssmin())
-    .pipe(gulp.dest(paths.dist.styles))
+  return gulp.src(paths.frontend.styles)
+    .pipe(sass({ errLogToConsole: true }))
+    .pipe(prefix())
+    .pipe(cssmin())
+    .pipe(gulp.dest(paths.dist.main))
 })
 
 var browserify = require('gulp-browserify')
