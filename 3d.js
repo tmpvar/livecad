@@ -77,10 +77,6 @@ shell.on("gl-render", function(t) {
   if (buffers) {
     shader.bind()
 
-    // buffers[1].bind();
-    // shader.attributes.position.pointer();
-    // shader.attributes.normal.pointer();
-
     var scratch = mat4.create()
     shader.uniforms.model = scratch
 
