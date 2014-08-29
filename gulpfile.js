@@ -13,7 +13,7 @@ var gulp = require('gulp')
         // sass and browserify handle includes for us
       , styles: './frontend/scss/main.scss'
       , entry: './frontend/js/main.js' 
-      , scripts: './frontend/js/**/*.js'
+      , scripts: ['./frontend/js/**/*.js', './node_modules/net-oce-protocol/*.js']
       }
     }
 
