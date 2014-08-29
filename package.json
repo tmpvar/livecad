@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "develop": "node server.js; livecad.js:bundle.js --live --open --cwd=static --index=static/index.html"
+    "develop": "gulp --oce=../net-oce/out/bin/net-oce"
   },
   "browserify": {
     "transform": [
