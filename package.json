@@ -18,7 +18,6 @@
     "glsl-hemisphere-light": "0.0.0",
     "javascript-editor": "^0.2.1",
     "net-oce-protocol": "git://github.com/solids/net-oce-protocol",
-    "optimist": "^0.6.1",
     "orbit-camera": "^1.0.0",
     "skateboard": "^0.2.9"
   },

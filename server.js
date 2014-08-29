@@ -1,4 +1,4 @@
-var argv = require('optimist').argv;
+var argv = require('minimist')(process.argv.slice(2));
 var spawn = require('child_process').spawn;
 var path = require('path');
 var skateboard = require('skateboard');
