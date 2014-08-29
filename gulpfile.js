@@ -12,7 +12,7 @@ var gulp = require('gulp')
 
         // sass and browserify handle includes for us
       , styles: './frontend/scss/main.scss'
-      , entry: './frontend/js/main.js' 
+      , entry: './frontend/js/main.js'
       , scripts: ['./frontend/js/**/*.js', './node_modules/net-oce-protocol/*.js']
       }
     }
@@ -33,14 +33,21 @@ gulp.task('styles', function (cb) {
     .pipe(gulp.dest(paths.dist))
 })
 
-var browserify = require('gulp-browserify')
+var watchify = require('gulp-watchify')
   , jsmin = require('gulp-uglify')
-gulp.task('scripts', function (cb) {
+  , streamify = require('gulp-streamify')
+
+// Browserify and copy js files
+gulp.task('scripts', watchify(function(watchify) {
   return gulp.src(paths.frontend.entry)
-    .pipe(browserify({ insertGlobals: true, debug: argv.debug }))
-    .pipe(argv.debug ? util.noop() : jsmin())
+    .pipe(watchify({
+        insertGlobals: true
+      , debug: argv.debug
+      , watch: paths.scripts
+    }))
+    .pipe(argv.debug ? util.noop() : streamify(jsmin()))
     .pipe(gulp.dest(paths.dist))
-})
+}))
 
 gulp.task('resources', function (cb) {
   return gulp.src(paths.frontend.resources)

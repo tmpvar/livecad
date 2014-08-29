@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "develop": "gulp --oce=../net-oce/out/bin/net-oce"
+    "develop": "gulp --oce=../net-oce/out/bin/net-oce --debug",
+    "start" : "gulp --oce=../net-oce/out/bin/net-oce"
   },
   "browserify": {
     "transform": [
@@ -17,7 +18,8 @@
     "gulp-sass": "^0.7.3",
     "gulp-autoprefixer": "^0.0.10",
     "gulp-minify-css": "^0.3.7",
-    "gulp-browserify": "^0.5.0",
+    "gulp-watchify": "^0.2.0",
+    "gulp-streamify": "^0.0.5",
     "gulp-uglify": "^0.3.2",
     "gulp-nodemon": "^1.0.4",
 
@@ -34,7 +36,7 @@
     "generate-function": "^2.0.0",
     "javascript-editor": "^0.2.1",
     "orbit-camera": "^1.0.0",
-    
+
     "net-oce-protocol": "git://github.com/solids/net-oce-protocol"
   }
 }
