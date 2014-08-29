@@ -36,19 +36,19 @@ gulp.task('styles', function (cb) {
 var browserify = require('gulp-browserify')
   , jsmin = require('gulp-uglify')
 gulp.task('scripts', function (cb) {
-  gulp.src(paths.frontend.scripts.main)
+  return gulp.src(paths.frontend.scripts)
     .pipe(browserify({ insertGlobals: true, debug: argv.debug }))
     .pipe(argv.debug ? util.noop() : jsmin())
     .pipe(gulp.dest(paths.dist))
 })
 
 gulp.task('resources', function (cb) {
-  gulp.src(paths.frontend.resources)
+  return gulp.src(paths.frontend.resources)
     .pipe(gulp.dest(paths.dist))
 })
 
 var nodemon = require('gulp-nodemon')
-gulp.task('watch', function (cb) {
+gulp.task('watch', ['html', 'styles', 'scripts', 'resources'], function (cb) {
   if (!argv.oce) throw console.error([
       'Error: Please provide location of oce binary'
     , 'Usage: "gulp --oce=path/to/oce"'
