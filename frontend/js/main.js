@@ -69,14 +69,6 @@ require('domready')(function() {
         return 'var ' + name + ' = ' + 'ops.' + name + ';';
       });
 
-      function evaluate() {
-        var fn = new Function('ops', header.join('\n') + '\n' + jse.getValue());
-        fn(methods);
-      }
-
-      evaluate();
-
-
       // hijack extract_verts
       var _display = methods.display;
       methods.display = function() {
