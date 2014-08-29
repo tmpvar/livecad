@@ -2,8 +2,7 @@ var gulp = require('gulp')
   , util = require('gulp-util')
   , argv = require('minimist')(process.argv.slice(2))
   , paths = {
-      allscripts: ['./**/*.js', '!./gulpfile.js']
-    , server: './server.js'
+      server: './server.js'
     , dist: './dist/'
     , frontend: {
         // html top level in directory only
@@ -13,7 +12,8 @@ var gulp = require('gulp')
 
         // sass and browserify handle includes for us
       , styles: './frontend/scss/main.scss'
-      , scripts: './frontend/js/main.js' 
+      , entry: './frontend/js/main.js' 
+      , scripts: './frontend/js/**/*.js'
       }
     }
 
@@ -36,7 +36,7 @@ gulp.task('styles', function (cb) {
 var browserify = require('gulp-browserify')
   , jsmin = require('gulp-uglify')
 gulp.task('scripts', function (cb) {
-  return gulp.src(paths.frontend.scripts)
+  return gulp.src(paths.frontend.entry)
     .pipe(browserify({ insertGlobals: true, debug: argv.debug }))
     .pipe(argv.debug ? util.noop() : jsmin())
     .pipe(gulp.dest(paths.dist))
@@ -55,7 +55,7 @@ gulp.task('watch', ['html', 'styles', 'scripts', 'resources'], function (cb) {
     ].join('\n'))
   gulp.watch(paths.frontend.html, ['html'])
   gulp.watch(paths.frontend.styles, ['styles'])
-  gulp.watch(paths.allscripts, ['scripts'])
+  gulp.watch(paths.frontend.scripts, ['scripts'])
   gulp.watch(paths.frontend.resources, ['resources'])
   nodemon(paths.server + ' --oce=' + argv.oce)
 })
