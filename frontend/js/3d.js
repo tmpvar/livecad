@@ -3,21 +3,52 @@ var glslify = require('glslify');
 var createOrbitCamera = require("orbit-camera");
 var glm = require("gl-matrix");
 var mat4 = glm.mat4;
+var vec3 = glm.vec3;
 var createVAO = require('gl-vao');
 
 var near = .1;
 var far = 1000;
+var fov = Math.PI/4.0;
 
 module.exports = setMesh;
 
-var center = [0,0,0];
+function isNear(a, b, thresh) {
+  return Math.abs(a-b) < (thresh || .1);
+}
+
+var cameraCenter = [0,0,0], cameraDistance = 200;
 function lerpCameraTo(camera, pos, dt) {
+  var feel = dt/10;
+
+  if (cameraDistance !== null && camera.distance !== cameraDistance) {
+
+    camera.distance += (cameraDistance - camera.distance) * feel;
+    if (isNear(camera.distance, cameraDistance)) {
+      cameraDistance = null;
+    }
+  }
 
   var cc = camera.center;
-  if (cc[0] !== pos[0] || cc[1] !== pos[1] || cc[2] !== pos[2]) {
-    cc[0] += (pos[0] - cc[0]) * dt/10;
-    cc[1] += (pos[1] - cc[1]) * dt/10;
-    cc[2] += (pos[2] - cc[2]) * dt/10;
+
+  if (cameraCenter) {
+    if (
+      !isNear(cc[0], cameraCenter[0]) ||
+      !isNear(cc[1], cameraCenter[1]) ||
+      !isNear(cc[2], cameraCenter[2])
+    ) {
+      cc[0] += (cameraCenter[0] - cc[0]) * feel;
+      cc[1] += (cameraCenter[1] - cc[1]) * feel;
+      cc[2] += (cameraCenter[2] - cc[2]) * feel;
+
+      if (
+        isNear(cc[0], cameraCenter[0]) &&
+        isNear(cc[1], cameraCenter[1]) &&
+        isNear(cc[2], cameraCenter[2])
+      ) {
+        cameraCenter = null;
+      }
+
+    }
   }
 }
 
@@ -32,11 +63,14 @@ function setMesh(e, b) {
   var gl = shell.gl;
   far = b[2][5] - b[2][2];
 
-  center = [
+  cameraCenter = [
     b[2][0] + (b[2][3] - b[2][0])/2,
     b[2][1] + (b[2][4] - b[2][1])/2,
     b[2][2] + (b[2][5] - b[2][2])/2
   ];
+
+  var r = vec3.distance(cameraCenter, [b[2][0], b[2][0], b[2][0]]);
+  cameraDistance = r * 1.0 / Math.sin(fov/2);
 
   totalVerts = b[0].length;
   if (!buffers) {
@@ -92,7 +126,7 @@ shell.on("gl-render", function(t) {
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
 
-  lerpCameraTo(camera, center, t);
+  lerpCameraTo(camera, cameraCenter, t);
 
   if (buffers) {
     shader.bind()
@@ -102,7 +136,7 @@ shell.on("gl-render", function(t) {
 
     shader.uniforms.projection = mat4.perspective(
       scratch,
-      Math.PI/4.0,
+      fov,
       shell.width/shell.height,
       near,
       far + camera.distance
