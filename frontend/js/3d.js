@@ -156,13 +156,21 @@ shell.on("tick", function() {
   if(shell.wasDown("mouse-left")) {
     camera.rotate([shell.mouseX/shell.width-0.5, shell.mouseY/shell.height-0.5],
                   [shell.prevMouseX/shell.width-0.5, shell.prevMouseY/shell.height-0.5])
+    cameraCenter = null;
+    cameraDistance = null;
   }
+
   if(shell.wasDown("mouse-right")) {
     camera.pan([10*(shell.mouseX-shell.prevMouseX)/shell.width,
                 10*(shell.mouseY - shell.prevMouseY)/shell.height])
+    cameraCenter = null;
+    cameraDistance = null;
   }
+
   if(shell.scroll[1]) {
     camera.zoom(shell.scroll[1] * 0.1)
+    cameraCenter = null;
+    cameraDistance = null;
   }
 })
 
