@@ -5,7 +5,8 @@ var glm = require("gl-matrix");
 var mat4 = glm.mat4;
 var vec3 = glm.vec3;
 var createVAO = require('gl-vao');
-
+var createFBO = require('gl-fbo');
+var fxaa = require('./fxaa');
 var near = .1;
 var far = 1000;
 var fov = Math.PI/4.0;
@@ -129,24 +130,27 @@ shell.on("gl-render", function(t) {
   lerpCameraTo(camera, cameraCenter, t);
 
   if (buffers) {
-    shader.bind()
 
-    var scratch = mat4.create()
-    shader.uniforms.model = scratch
+    fxaa(gl, shell, function() {
+      shader.bind()
 
-    shader.uniforms.projection = mat4.perspective(
-      scratch,
-      fov,
-      shell.width/shell.height,
-      near,
-      far + camera.distance
-    );
+      var scratch = mat4.create()
+      shader.uniforms.model = scratch
 
-    shader.uniforms.view = camera.view(scratch)
-    shader.uniforms.eye = camera.center;
-    mesh.bind();
-    mesh.draw(gl.TRIANGLES, totalVerts/3)
-    mesh.unbind();
+      shader.uniforms.projection = mat4.perspective(
+        scratch,
+        fov,
+        shell.width/shell.height,
+        near,
+        far + camera.distance
+      );
+
+      shader.uniforms.view = camera.view(scratch)
+      shader.uniforms.eye = camera.center;
+      mesh.bind();
+      mesh.draw(gl.TRIANGLES, totalVerts/3)
+      mesh.unbind();
+    });
   } else {
     // TODO: render interesting placeholder.. dust motes or something ;)
   }
