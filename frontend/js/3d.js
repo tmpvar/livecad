@@ -10,6 +10,17 @@ var far = 1000;
 
 module.exports = setMesh;
 
+var center = [0,0,0];
+function lerpCameraTo(camera, pos, dt) {
+
+  var cc = camera.center;
+  if (cc[0] !== pos[0] || cc[1] !== pos[1] || cc[2] !== pos[2]) {
+    cc[0] += (pos[0] - cc[0]) * dt/10;
+    cc[1] += (pos[1] - cc[1]) * dt/10;
+    cc[2] += (pos[2] - cc[2]) * dt/10;
+  }
+}
+
 //Initialize shell
 var shell = require("gl-now")({
   element: document.querySelector('#output'),
@@ -20,6 +31,13 @@ var mesh, buffers, totalVerts;
 function setMesh(e, b) {
   var gl = shell.gl;
   far = b[2][5] - b[2][2];
+
+  center = [
+    b[2][0] + (b[2][3] - b[2][0])/2,
+    b[2][1] + (b[2][4] - b[2][1])/2,
+    b[2][2] + (b[2][5] - b[2][2])/2
+  ];
+
   totalVerts = b[0].length;
   if (!buffers) {
     buffers = [
@@ -73,6 +91,8 @@ shell.on("gl-render", function(t) {
 
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
+
+  lerpCameraTo(camera, center, t);
 
   if (buffers) {
     shader.bind()
