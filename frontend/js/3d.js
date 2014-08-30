@@ -70,7 +70,7 @@ function setMesh(e, b) {
   ];
 
   var r = vec3.distance(cameraCenter, [b[2][0], b[2][0], b[2][0]]);
-  cameraDistance = r * 1.0 / Math.sin(fov/2);
+  cameraDistance = r * 2 * 1.0 / Math.sin(fov/2);
 
   totalVerts = b[0].length;
   if (!buffers) {
