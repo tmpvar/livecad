@@ -6,38 +6,40 @@ require('domready')(function() {
 
   var renderMesh = require('./3d');
 
+  var value = localStorage.getItem('text') || [
+    'var distanceBetweenHoles = 31;',
+    'var centerCircleDiameter = 22;',
+    'var dimension = 42; // width and height',
+    'var materialWidth = 3;',
+    '',
+    '// compute hole pattern',
+    'var triLeg = distanceBetweenHoles/2;',
+    'var l = Math.sqrt(triLeg*triLeg*2);',
+    '',
+    'var b = box(dimension, materialWidth, dimension);',
+    'b = b.cut(cylinder(centerCircleDiameter/2, materialWidth));',
+    '',
+    'var TAU = Math.PI*2;',
+    'var a45 = Math.PI/4;',
+    'var a90 = Math.PI/2',
+    '',
+    'for (var i=1; i<=4; i++) {',
+    '  var c = cylinder(1.5, materialWidth).translate(',
+    '    l * Math.sin(i * a90 + a45),',
+    '    0,',
+    '    l * Math.cos(i * a90 + a45)',
+    '  );',
+    '',
+    '  b = b.cut(c)',
+    '}',
+    '',
+    'display(b)',
+  ].join('\n');
+
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: [
-  'var distanceBetweenHoles = 31;',
-  'var centerCircleDiameter = 22;',
-  'var dimension = 42; // width and height',
-  'var materialWidth = 3;',
-  '',
-  '// compute hole pattern',
-  'var triLeg = distanceBetweenHoles/2;',
-  'var l = Math.sqrt(triLeg*triLeg*2);',
-  '',
-  'var b = box(dimension, materialWidth, dimension);',
-  'b = b.cut(cylinder(centerCircleDiameter/2, materialWidth));',
-  '',
-  'var TAU = Math.PI*2;',
-  'var a45 = Math.PI/4;',
-  'var a90 = Math.PI/2',
-  '',
-  'for (var i=1; i<=4; i++) {',
-  '  var c = cylinder(1.5, materialWidth).translate(',
-  '    l * Math.sin(i * a90 + a45),',
-  '    0,',
-  '    l * Math.cos(i * a90 + a45)',
-  '  );',
-  '',
-  '  b = b.cut(c)',
-  '}',
-  '',
-  'display(b)',
-].join('\n')
+    value: value
   });
 
   jse.editor.setCursor(0, 0);
@@ -70,18 +72,25 @@ require('domready')(function() {
         });
         return p;
       };
-      function evil () {
+
+
+
+      function evil (text) {
         generate()
           ('function(){')
             (header.join('\n'))
-            (jse.getValue())
+            (text)
           ('}').toFunction({ops:methods})()
       }
 
-      evil()
+      evil(jse.getValue())
 
       jse.on('valid', function(valid) {
-        if (valid) methods.reset(evil);
+        if (valid) {
+          var text = jse.getValue();
+          localStorage.setItem('text', text);
+          methods.reset(text);
+        }
       });
 
       window.methods = methods;
