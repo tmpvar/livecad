@@ -57,13 +57,13 @@ function lerpCameraTo(camera, dt) {
   }
 
   if (cameraCenter || cameraDistance) {
-    gl.dirty();
+    renderDebouncer();
   }
 }
 
 var mesh, buffers, totalVerts;
 function setMesh(e, b) {
-  gl.dirty();
+  renderDebouncer();
 
   cameraCenter = [
     b[2][0] + (b[2][3] - b[2][0])/2,
@@ -145,6 +145,18 @@ var gl = fc(function render(t) {
   }
 }, false, 3);
 
+function createDebouncer(time, before, after) {
+  var handle = setTimeout(after, time);
+
+  return function() {
+    before();
+    clearTimeout(handle);
+    handle = setTimeout(after, time);
+  }
+}
+
+var renderDebouncer = createDebouncer(1000, gl.start, gl.stop);
+
 //Create shader
 shader = createShader(gl)
 shader.attributes.position.location = 0;
@@ -165,17 +177,18 @@ function handleMouse(ev) {
 
   cameraCenter = null;
   cameraDistance = null;
-  gl.dirty();
 
   switch (ev.type) {
 
     case 'mousewheel':
       camera.zoom(ev.wheelDeltaY * -0.05)
+      renderDebouncer();
     break;
 
     case 'mousedown':
       down = true;
       transformMouse(ev, lastPosition);
+      renderDebouncer();
     break;
   }
 }
@@ -185,12 +198,13 @@ function handleMouse(ev) {
 });
 
 document.addEventListener('mouseup', function(ev) {
+  renderDebouncer();
   down = false;
 });
 
 document.addEventListener('mousemove', function(ev) {
   if (down) {
-
+    renderDebouncer();
     transformMouse(ev, currentPosition);
     var w = gl.canvas.width;
     var h = gl.canvas.height;
@@ -205,7 +219,6 @@ document.addEventListener('mousemove', function(ev) {
 
     lastPosition[0] = currentPosition[0];
     lastPosition[1] = currentPosition[1];
-    gl.dirty();
   }
 });
 
