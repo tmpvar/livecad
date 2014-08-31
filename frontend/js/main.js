@@ -1,13 +1,5 @@
-var glnow = require('gl-now');
-var glslify = require('glslify');
 var skateboard = require('skateboard');
 var generate = require('generate-function');
-
-var createProgram = glslify({
-  fragment: "../resources/shaders/basic.frag",
-  vertex: "../resources/shaders/basic.vert"
-});
-
 var createClient = require('./core');
 
 require('domready')(function() {
