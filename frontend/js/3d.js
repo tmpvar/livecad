@@ -7,6 +7,7 @@ var vec3 = glm.vec3;
 var createVAO = require('gl-vao');
 var createFBO = require('gl-fbo');
 var fxaa = require('./fxaa');
+var fc = require('fc');
 var near = .1;
 var far = 1000;
 var fov = Math.PI/4.0;
@@ -18,15 +19,16 @@ function isNear(a, b, thresh) {
 }
 
 var cameraCenter = [0,0,0], cameraDistance = 200;
-function lerpCameraTo(camera, pos, dt) {
-  var feel = dt/10;
+function lerpCameraTo(camera, dt) {
+  var feel = dt/100;
 
-  if (cameraDistance !== null && camera.distance !== cameraDistance) {
-
+  if (cameraDistance && !isNear(camera.distance, cameraDistance)) {
     camera.distance += (cameraDistance - camera.distance) * feel;
     if (isNear(camera.distance, cameraDistance)) {
-      cameraDistance = null;
+      cameraDistance = 0;
     }
+  } else {
+    cameraDistance = 0;
   }
 
   var cc = camera.center;
@@ -49,20 +51,19 @@ function lerpCameraTo(camera, pos, dt) {
         cameraCenter = null;
       }
 
+    } else {
+      cameraCenter = null;
     }
+  }
+
+  if (cameraCenter || cameraDistance) {
+    gl.dirty();
   }
 }
 
-//Initialize shell
-var shell = require("gl-now")({
-  element: document.querySelector('#output'),
-  clearColor : [0, 0, 0, 1]
-});
-
 var mesh, buffers, totalVerts;
 function setMesh(e, b) {
-  var gl = shell.gl;
-  far = b[2][5] - b[2][2];
+  gl.dirty();
 
   cameraCenter = [
     b[2][0] + (b[2][3] - b[2][0])/2,
@@ -70,8 +71,12 @@ function setMesh(e, b) {
     b[2][2] + (b[2][5] - b[2][2])/2
   ];
 
-  var r = vec3.distance(cameraCenter, [b[2][0], b[2][0], b[2][0]]);
-  cameraDistance = r * 2 * 1.0 / Math.sin(fov/2);
+  far = vec3.distance(
+    [b[2][0], b[2][1], b[2][2]],
+    [b[2][3], b[2][4], b[2][5]]
+  );
+
+  cameraDistance = far * 1.0 / Math.sin(fov/2);
 
   totalVerts = b[0].length;
   if (!buffers) {
@@ -105,33 +110,17 @@ var camera = createOrbitCamera([0, 200, 200],
                                [0, 1, 0])
 var shader;
 
-shell.on("gl-init", function() {
-  var gl = shell.gl
-
-  //Create shader
-  shader = createShader(shell.gl)
-  shader.attributes.position.location = 0;
-  shader.attributes.normal.location = 1;
-
-  ['mousedown', 'click', 'mouseup', 'mousemove', 'mousewheel'].forEach(function(name) {
-    document.querySelector('canvas').addEventListener(name, function(ev) {
-      ev.preventDefault();
-    }, true)
-  });
-})
-
-var start = Date.now();
-shell.on("gl-render", function(t) {
-  var gl = shell.gl
+var gl = fc(function render(t) {
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
 
-  lerpCameraTo(camera, cameraCenter, t);
+  lerpCameraTo(camera, t);
 
   if (buffers) {
 
-    fxaa(gl, shell, function() {
+    fxaa(gl, gl.canvas, function() {
       shader.bind()
 
       var scratch = mat4.create()
@@ -140,9 +129,9 @@ shell.on("gl-render", function(t) {
       shader.uniforms.projection = mat4.perspective(
         scratch,
         fov,
-        shell.width/shell.height,
+        gl.canvas.width/gl.canvas.height,
         near,
-        far + camera.distance
+        far + Math.max(camera.distance, cameraDistance)
       );
 
       shader.uniforms.view = camera.view(scratch)
@@ -154,32 +143,69 @@ shell.on("gl-render", function(t) {
   } else {
     // TODO: render interesting placeholder.. dust motes or something ;)
   }
-})
+}, false, 3);
 
-shell.on("tick", function() {
-  if(shell.wasDown("mouse-left")) {
-    camera.rotate([shell.mouseX/shell.width-0.5, shell.mouseY/shell.height-0.5],
-                  [shell.prevMouseX/shell.width-0.5, shell.prevMouseY/shell.height-0.5])
-    cameraCenter = null;
-    cameraDistance = null;
+//Create shader
+shader = createShader(gl)
+shader.attributes.position.location = 0;
+shader.attributes.normal.location = 1;
+
+var lastPosition = [0, 0];
+var currentPosition = [0, 0];
+var down = false;
+
+function transformMouse(ev, out) {
+  out[0] = ev.clientX;
+  out[1] = ev.clientY;
+  return out;
+}
+
+function handleMouse(ev) {
+  ev.preventDefault();
+
+  cameraCenter = null;
+  cameraDistance = null;
+  gl.dirty();
+
+  switch (ev.type) {
+
+    case 'mousewheel':
+      camera.zoom(ev.wheelDeltaY * -0.05)
+    break;
+
+    case 'mousedown':
+      down = true;
+      transformMouse(ev, lastPosition);
+    break;
   }
+}
 
-  if(shell.wasDown("mouse-right")) {
-    camera.pan([10*(shell.mouseX-shell.prevMouseX)/shell.width,
-                10*(shell.mouseY - shell.prevMouseY)/shell.height])
-    cameraCenter = null;
-    cameraDistance = null;
+['mousedown', 'click', 'mousewheel'].forEach(function(name) {
+  gl.canvas.addEventListener(name, handleMouse, true);
+});
+
+document.addEventListener('mouseup', function(ev) {
+  down = false;
+});
+
+document.addEventListener('mousemove', function(ev) {
+  if (down) {
+
+    transformMouse(ev, currentPosition);
+    var w = gl.canvas.width;
+    var h = gl.canvas.height;
+
+    camera.rotate([
+      currentPosition[0]/w-0.5,
+      currentPosition[1]/h-0.5
+    ],[
+      lastPosition[0]/w-0.5,
+      lastPosition[1]/h-0.5
+    ])
+
+    lastPosition[0] = currentPosition[0];
+    lastPosition[1] = currentPosition[1];
+    gl.dirty();
   }
+});
 
-  if(shell.scroll[1]) {
-    camera.zoom(shell.scroll[1] * 0.1)
-    cameraCenter = null;
-    cameraDistance = null;
-  }
-})
-
-
-
-shell.on("gl-error", function(e) {
-  throw new Error("WebGL not supported :(")
-})
