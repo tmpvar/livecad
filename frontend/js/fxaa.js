@@ -8,7 +8,7 @@ var createFBO = require('gl-fbo');
 var createBuffer = require('gl-buffer');
 
 var clear = require('gl-clear')({
-  color: [0, 0, 0, 1],
+  color: [0x11/255, 0x11/255, 0x22/255, 1],
   depth: true,
   stencil: false
 });

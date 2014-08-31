@@ -1,5 +1,5 @@
 @import 'normalize.scss'; // css reset
-@import 'fonts.scss'; // font defs as 'Inconsolata' 
+@import 'fonts.scss'; // font defs as 'Inconsolata'
 @import 'codemirror.scss'; // styles for code editor
 
 html, body, #editor, #output { position: fixed; height: 100%; width: 100%; top: 0; left: 0; }
@@ -7,4 +7,4 @@ html, body, #editor, #output { position: fixed; height: 100%; width: 100%; top: 
 body { overflow: hidden; } // disable overscroll on osx
 
 #editor { z-index: 1; width: 40em; }
-#output { background: linear-gradient(#3a8d7a, #111); }
+#output { background: #112; }
