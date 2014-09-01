@@ -89,7 +89,9 @@ require('domready')(function() {
         if (valid) {
           var text = jse.getValue();
           localStorage.setItem('text', text);
-          methods.reset(text);
+          methods.reset(function() {
+            evil(text)
+          });
         }
       });
 
