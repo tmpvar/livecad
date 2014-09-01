@@ -76,7 +76,9 @@ function setMesh(e, b) {
     [b[2][3], b[2][4], b[2][5]]
   );
 
-  cameraDistance = far * 1.0 / Math.sin(fov/2);
+  cameraDistance = far/2 * 1.0 / Math.sin(fov/2);
+
+  far*=2;
 
   totalVerts = b[0].length;
   if (!buffers) {
@@ -131,7 +133,7 @@ var gl = fc(function render(t) {
         fov,
         gl.canvas.width/gl.canvas.height,
         near,
-        far + Math.max(camera.distance, cameraDistance)
+        far + Math.abs(camera.distance) + Math.abs(cameraDistance)
       );
 
       shader.uniforms.view = camera.view(scratch)
@@ -181,7 +183,8 @@ function handleMouse(ev) {
   switch (ev.type) {
 
     case 'mousewheel':
-      camera.zoom(ev.wheelDeltaY * -0.05)
+      var ratio = camera.distance/far;
+      camera.zoom(ev.wheelDeltaY * -ratio * 100);
       renderDebouncer();
     break;
 
