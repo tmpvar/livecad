@@ -115,7 +115,6 @@ var shader;
 var gl = fc(function render(t) {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-  gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
 
   lerpCameraTo(camera, t);
