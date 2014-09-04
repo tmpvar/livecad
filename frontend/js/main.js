@@ -74,14 +74,23 @@ require('domready')(function() {
         return p;
       };
 
-
-
       function evil (text) {
-        generate()
-          ('function(){')
-            (header.join('\n'))
-            (text)
-          ('}').toFunction({ops:methods})()
+        try {
+          generate()
+            ('function(){')
+              (header.join(';'))
+              (text)
+            ('}').toFunction({ops:methods})()
+        } catch (e) {
+          console.error();
+          var matches = e.stack.match(/anonymous>:(\d*)/)
+          // TODO: add the error message to the editor
+          if (matches) {
+            var lineNumber = parseInt(matches[1]) - 5;
+            jse.errorLines.push( {num: lineNumber, message: e.message} )
+            jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
+          }
+        }
       }
 
       evil(jse.getValue())
