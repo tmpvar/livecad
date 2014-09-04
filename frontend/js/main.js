@@ -1,6 +1,7 @@
 var skateboard = require('skateboard');
 var generate = require('generate-function');
-var createClient = require('./core');
+var createClient = require('./client');
+var qel = require('qel');
 
 require('domready')(function() {
 
@@ -38,7 +39,7 @@ require('domready')(function() {
 
   // setup editor
   var jse = require('javascript-editor')({
-    container: document.querySelector('#editor'),
+    container: qel('#editor'),
     value: value,
     updateInterval:  0
   });
@@ -77,7 +78,7 @@ require('domready')(function() {
       function appendErrorLines() {
         if (jse.errorLines) {
 
-          var els = document.querySelectorAll('.errorLine')
+          var els = qel('.errorLine', null, true);
 
           jse.errorLines.forEach(function(err, idx) {
             var el = document.createElement('error');
@@ -125,7 +126,7 @@ require('domready')(function() {
       jse.editor._handlers.change[0]();
 
       jse.on('valid', function(valid) {
-        var els = document.querySelectorAll('.code-error-message'), l = els.length;
+        var els = qel('.code-error-message', null, true), l = els.length;
         for (var i=0; i<l; i++) {
           els[i].parentNode.removeChild(els[i]);
         }

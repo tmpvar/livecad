@@ -15,6 +15,7 @@
     "gl-fbo": "^2.0.2",
     "glsl-fxaa": "^2.1.0",
     "minimist": "^1.1.0",
+    "qel": "^1.0.0",
     "skateboard": "^0.2.9"
   },
   "devDependencies": {
