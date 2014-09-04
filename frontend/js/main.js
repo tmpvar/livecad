@@ -74,34 +74,71 @@ require('domready')(function() {
         return p;
       };
 
+      function appendErrorLines() {
+        if (jse.errorLines) {
+
+          var els = document.querySelectorAll('.errorLine')
+
+          jse.errorLines.forEach(function(err, idx) {
+            var el = document.createElement('error');
+            el.setAttribute('class', 'code-error-message');
+            el.innerHTML = err.message.replace(/^Line \d*:/, '');
+            // TODO: position correctly
+            document.body.appendChild(el);
+
+            // find where the message should go
+            var errorLineElement = els[idx];
+
+            if (errorLineElement) {
+              var bounds = errorLineElement.getBoundingClientRect();
+              el.style.top = bounds.top + 'px';
+              el.style.left = (bounds.right - 1) + 'px';
+            }
+          });
+        }
+      }
+
       function evil (text) {
+
         try {
           generate()
             ('function(){')
               (header.join(';'))
               (text)
             ('}').toFunction({ops:methods})()
+
         } catch (e) {
-          console.error();
-          var matches = e.stack.match(/anonymous>:(\d*)/)
-          // TODO: add the error message to the editor
+          var matches = e.stack.match(/anonymous>:(\d*):(\d*)/);
+
           if (matches) {
             var lineNumber = parseInt(matches[1]) - 5;
-            jse.errorLines.push( {num: lineNumber, message: e.message} )
+            jse.errorLines.push( {
+              num: lineNumber,
+              message: e.message,
+              col: parseInt(matches[2])
+            });
             jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
           }
         }
       }
 
-      evil(jse.getValue())
+      jse.editor._handlers.change[0]();
 
       jse.on('valid', function(valid) {
+        var els = document.querySelectorAll('.code-error-message'), l = els.length;
+        for (var i=0; i<l; i++) {
+          els[i].parentNode.removeChild(els[i]);
+        }
+
         if (valid) {
           var text = jse.getValue();
           localStorage.setItem('text', text);
           methods.reset(function() {
             evil(text)
+            appendErrorLines();
           });
+        } else {
+          appendErrorLines();
         }
       });
 
