@@ -45,7 +45,7 @@ gulp.task('scripts', watchify(function(watchify) {
       , debug: argv.debug
       , watch: paths.scripts
     }))
-    .pipe(argv.debug ? util.noop() : streamify(jsmin()))
+    .pipe(argv.debug ? util.noop() : streamify(jsmin({ mangle: false })))
     .pipe(gulp.dest(paths.dist))
 }))
 
