@@ -65,26 +65,28 @@ var mesh, buffers, totalVerts;
 function setMesh(e, b) {
   renderDebouncer();
 
+  var aabb = b.bounds;
+
   cameraCenter = [
-    b[2][0] + (b[2][3] - b[2][0])/2,
-    b[2][1] + (b[2][4] - b[2][1])/2,
-    b[2][2] + (b[2][5] - b[2][2])/2
+    aabb[0] + (aabb[3] - aabb[0])/2,
+    aabb[1] + (aabb[4] - aabb[1])/2,
+    aabb[2] + (aabb[5] - aabb[2])/2
   ];
 
   far = vec3.distance(
-    [b[2][0], b[2][1], b[2][2]],
-    [b[2][3], b[2][4], b[2][5]]
+    [aabb[0], aabb[1], aabb[2]],
+    [aabb[3], aabb[4], aabb[5]]
   );
 
   cameraDistance = far/2 * 1.0 / Math.sin(fov/2);
 
   far*=2;
 
-  totalVerts = b[0].length;
+  totalVerts = b.positions.length;
   if (!buffers) {
     buffers = [
-      createBuffer(gl, b[0]),
-      createBuffer(gl, b[1])
+      createBuffer(gl, b.positions),
+      createBuffer(gl, b.normals)
     ];
 
     mesh = createVAO(gl, [{
@@ -96,8 +98,8 @@ function setMesh(e, b) {
     }]);
 
   } else {
-    buffers[0].update(b[0]);
-    buffers[1].update(b[1]);
+    buffers[0].update(b.positions);
+    buffers[1].update(b.normals);
   }
 }
 
