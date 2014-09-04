@@ -11,6 +11,8 @@ var fc = require('fc');
 var near = .1;
 var far = 1000;
 var fov = Math.PI/4.0;
+var Renderable = require('./renderable');
+var hsl = require('./hsl');
 
 module.exports = setMesh;
 
@@ -61,11 +63,42 @@ function lerpCameraTo(camera, dt) {
   }
 }
 
-var mesh, buffers, totalVerts;
+var min = Math.min;
+var max = Math.max;
+
+var mesh, buffers, totalVerts, renderables = [];
 function setMesh(e, b) {
   renderDebouncer();
 
-  var aabb = b.bounds;
+  if (!Array.isArray(b)) {
+    b = [b];
+  }
+  var aabb = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+
+  while (renderables.length) {
+    renderables.pop().destroy();
+  }
+
+  var l = b.length;
+  for (var i=0; i<l; i++) {
+    var r = new Renderable(gl, b[i]);
+    renderables.push(r);
+
+    var bounds = r.bounds;
+    aabb[0] = min(aabb[0], bounds[0]);
+    aabb[1] = min(aabb[1], bounds[1]);
+    aabb[2] = min(aabb[2], bounds[2]);
+
+    aabb[3] = max(aabb[3], bounds[3]);
+    aabb[4] = max(aabb[4], bounds[4]);
+    aabb[5] = max(aabb[5], bounds[5]);
+  }
+
+  // TODO: prepare features as part of the renderables
+  // TODO: mouse picking
+  // TODO: render features on hover
+  // TODO: rotate/fit face based on feature mouseup (if not moved)
+  // TODO: center camera on the center of the feature
 
   cameraCenter = [
     aabb[0] + (aabb[3] - aabb[0])/2,
@@ -81,26 +114,6 @@ function setMesh(e, b) {
   cameraDistance = far/2 * 1.0 / Math.sin(fov/2);
 
   far*=2;
-
-  totalVerts = b.positions.length;
-  if (!buffers) {
-    buffers = [
-      createBuffer(gl, b.positions),
-      createBuffer(gl, b.normals)
-    ];
-
-    mesh = createVAO(gl, [{
-      buffer: buffers[0],
-      size: 3
-    },{
-      buffer: buffers[1],
-      size: 3
-    }]);
-
-  } else {
-    buffers[0].update(b.positions);
-    buffers[1].update(b.normals);
-  }
 }
 
 
@@ -114,16 +127,26 @@ var camera = createOrbitCamera([0, 200, 200],
                                [0, 1, 0])
 var shader;
 
+var clear = require('gl-clear')({
+  color: [0x11/255, 0x11/255, 0x22/255, 1],
+  depth: true,
+  stencil: false
+});
+
+
 var gl = fc(function render(t) {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-  gl.enable(gl.CULL_FACE)
+  gl.enable(gl.CULL_FACE);
+  gl.enable(gl.DEPTH_TEST);
+
+  clear(gl);
 
   lerpCameraTo(camera, t);
 
-  if (buffers) {
+  if (renderables.length) {
 
-    fxaa(gl, gl.canvas, function() {
+    //fxaa(gl, gl.canvas, function() {
       shader.bind()
 
       var scratch = mat4.create()
@@ -139,10 +162,14 @@ var gl = fc(function render(t) {
 
       shader.uniforms.view = camera.view(scratch)
       shader.uniforms.eye = camera.center;
-      mesh.bind();
-      mesh.draw(gl.TRIANGLES, totalVerts/3)
-      mesh.unbind();
-    });
+
+      var l = renderables.length;
+      for (var i=0; i<l; i++) {
+        var color = hsl((i+.1)/l, .75, .65);
+        renderables[i].render(gl, shader, color);
+      }
+
+    //});
   } else {
     // TODO: render interesting placeholder.. dust motes or something ;)
   }

@@ -15,8 +15,11 @@
     "gl-fbo": "^2.0.2",
     "glsl-fxaa": "^2.1.0",
     "minimist": "^1.1.0",
+    "onecolor": "^2.4.2",
     "qel": "^1.0.0",
-    "skateboard": "^0.2.9"
+    "skateboard": "^0.2.9",
+    "workerify": "^0.3.0",
+    "workerstream": "^1.2.1"
   },
   "devDependencies": {
     "gulp": "^3.8.7",
