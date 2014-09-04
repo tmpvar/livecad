@@ -39,7 +39,8 @@ require('domready')(function() {
   // setup editor
   var jse = require('javascript-editor')({
     container: document.querySelector('#editor'),
-    value: value
+    value: value,
+    updateInterval:  0
   });
 
   jse.editor.setCursor(0, 0);
@@ -53,7 +54,6 @@ require('domready')(function() {
 
   skateboard(function(stream) {
     stream.socket.addEventListener('close', function() {
-      console.log('reloading');
       setTimeout(function() {
         window.location.reload();
       }, 1000);
