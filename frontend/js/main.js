@@ -52,10 +52,11 @@ require('domready')(function() {
   window.Buffer = Buffer;
 
   skateboard(function(stream) {
-
-    stream.on('close', function() {
+    stream.socket.addEventListener('close', function() {
       console.log('reloading');
-      window.location.reload();
+      setTimeout(function() {
+        window.location.reload();
+      }, 1000);
     });
 
     createClient(stream, function(err, methods) {
