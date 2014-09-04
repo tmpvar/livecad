@@ -182,9 +182,10 @@ function handleMouse(ev) {
   switch (ev.type) {
 
     case 'mousewheel':
-      var ratio = camera.distance/far;
-      camera.zoom(ev.wheelDeltaY * -ratio * 100);
-      renderDebouncer();
+      if (ev.wheelDeltaY) {
+        camera.zoom(ev.wheelDeltaY * -.05);
+        renderDebouncer();
+      }
     break;
 
     case 'mousedown':
