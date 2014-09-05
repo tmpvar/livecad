@@ -55,7 +55,15 @@ function pickMouse(gl, mouse, objects, fn) {
     objects[i].render(gl, shader, c);
   }
 
-  gl.readPixels(mouse[0], mouse[1], 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  gl.readPixels(
+    mouse[0],
+    gl.canvas.height-mouse[1],
+    1,
+    1,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    pixel
+  );
   var val = new Uint32Array(pixel.buffer)[0];
   return val-1;
 }
