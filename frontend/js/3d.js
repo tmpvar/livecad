@@ -14,6 +14,8 @@ var fov = Math.PI/4.0;
 var Renderable = require('./renderable');
 var hsl = require('./hsl');
 
+var pickMouse = require('./picker');
+
 module.exports = setMesh;
 
 function isNear(a, b, thresh) {
@@ -133,8 +135,37 @@ var clear = require('gl-clear')({
   stencil: false
 });
 
+function setupRender(gl, shader) {
+  shader.bind()
+
+  var scratch = mat4.create()
+  shader.uniforms.model = scratch
+
+  shader.uniforms.projection = mat4.perspective(
+    scratch,
+    fov,
+    gl.canvas.width/gl.canvas.height,
+    near,
+    far + Math.abs(camera.distance) + Math.abs(cameraDistance)
+  );
+
+  shader.uniforms.view = camera.view(scratch)
+  shader.uniforms.eye = camera.center;
+}
+
+function renderRenderables(gl, shader) {
+  if (renderables.length) {
+    var l = renderables.length;
+    for (var i=0; i<l; i++) {
+      var color = hsl((i+.1)/l, .75, .65);
+      renderables[i].render(gl, shader, color);
+    }
+  }
+}
+
 
 var gl = fc(function render(t) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
   gl.enable(gl.CULL_FACE);
@@ -142,37 +173,11 @@ var gl = fc(function render(t) {
 
   clear(gl);
 
+  setupRender(gl, shader);
+  renderRenderables(gl, shader);
+
   lerpCameraTo(camera, t);
 
-  if (renderables.length) {
-
-    //fxaa(gl, gl.canvas, function() {
-      shader.bind()
-
-      var scratch = mat4.create()
-      shader.uniforms.model = scratch
-
-      shader.uniforms.projection = mat4.perspective(
-        scratch,
-        fov,
-        gl.canvas.width/gl.canvas.height,
-        near,
-        far + Math.abs(camera.distance) + Math.abs(cameraDistance)
-      );
-
-      shader.uniforms.view = camera.view(scratch)
-      shader.uniforms.eye = camera.center;
-
-      var l = renderables.length;
-      for (var i=0; i<l; i++) {
-        var color = hsl((i+.1)/l, .75, .65);
-        renderables[i].render(gl, shader, color);
-      }
-
-    //});
-  } else {
-    // TODO: render interesting placeholder.. dust motes or something ;)
-  }
 }, false, 3);
 
 function createDebouncer(time, before, after) {
@@ -235,9 +240,10 @@ document.addEventListener('mouseup', function(ev) {
 });
 
 document.addEventListener('mousemove', function(ev) {
+  transformMouse(ev, currentPosition);
+  renderDebouncer();
+
   if (down) {
-    renderDebouncer();
-    transformMouse(ev, currentPosition);
     var w = gl.canvas.width;
     var h = gl.canvas.height;
 
@@ -251,6 +257,11 @@ document.addEventListener('mousemove', function(ev) {
 
     lastPosition[0] = currentPosition[0];
     lastPosition[1] = currentPosition[1];
+  } else {
+    var index = pickMouse(gl, currentPosition, renderables, setupRender);
+    if (index >= 0) {
+      renderables[index].color = [1, 0, 1, 1];
+    }
   }
 });
 

@@ -5,19 +5,19 @@ varying vec3 camera;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform vec3 color;
+uniform vec4 color;
 
 
 #pragma glslify: hemisphere = require(glsl-hemisphere-light)
 
 void main() {
 
-  vec3 gnd = color * 0.6;
+  vec3 gnd = color.xyz * 0.6;
   vec3 direction = normalize(vec3(0.0, 1.0, 0.0));
 
   vec3 lighting = hemisphere(
     fragColor,
-    color,
+    color.xyz,
     gnd,
     direction,
     model,

@@ -34,7 +34,7 @@ Renderable.prototype.destroy = function() {
 };
 
 Renderable.prototype.render = function(gl, shader, color) {
-  shader.uniforms.color = color;
+  shader.uniforms.color = this.color || color;
   this.vao.bind();
   this.vao.draw(gl.TRIANGLES, this.totalVerts/3)
   this.vao.unbind();
