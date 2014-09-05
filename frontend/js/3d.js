@@ -158,7 +158,7 @@ function renderRenderables(gl, shader) {
     var l = renderables.length;
     for (var i=0; i<l; i++) {
       var color = hsl((i+.1)/l, .75, .65);
-      renderables[i].render(gl, shader, color);
+      renderables[i].render(gl, shader, color, true);
     }
   }
 }
@@ -239,6 +239,9 @@ document.addEventListener('mouseup', function(ev) {
   down = false;
 });
 
+// mouse picking state
+var pickedIndex = -1, pickedFeatureIndex = -1;
+
 document.addEventListener('mousemove', function(ev) {
   transformMouse(ev, currentPosition);
   renderDebouncer();
@@ -258,9 +261,32 @@ document.addEventListener('mousemove', function(ev) {
     lastPosition[0] = currentPosition[0];
     lastPosition[1] = currentPosition[1];
   } else {
-    var index = pickMouse(gl, currentPosition, renderables, setupRender);
-    if (index >= 0) {
-      renderables[index].color = [1, 0, 1, 1];
+
+    if (pickedIndex > -1 && pickedFeatureIndex > -1) {
+      renderables[pickedIndex].features[pickedFeatureIndex].selected = false;
+    }
+
+    pickedIndex = pickMouse(gl, currentPosition, renderables, setupRender);
+
+    if (pickedIndex >= 0) {
+      if (!renderables[pickedIndex]) {
+        pickedIndex = -1;
+        return;
+      }
+      var renderable = renderables[pickedIndex];
+      pickedFeatureIndex = pickMouse(
+        gl,
+        currentPosition,
+        renderable.features,
+        setupRender
+      );
+
+      var feature = renderable.features[pickedFeatureIndex];
+      if (pickedFeatureIndex > -1 && feature) {
+        feature.selected = true;
+      } else {
+        pickedFeatureIndex = -1;
+      }
     }
   }
 });

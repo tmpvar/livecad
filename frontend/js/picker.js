@@ -51,8 +51,7 @@ function pickMouse(gl, mouse, objects, fn) {
       uint8Color[3]/255
     ];
 
-    objects[i].color = null;
-    objects[i].render(gl, shader, c);
+    objects[i].render(gl, shader, c, false);
   }
 
   gl.readPixels(
@@ -64,6 +63,7 @@ function pickMouse(gl, mouse, objects, fn) {
     gl.UNSIGNED_BYTE,
     pixel
   );
+
   var val = new Uint32Array(pixel.buffer)[0];
   return val-1;
 }
