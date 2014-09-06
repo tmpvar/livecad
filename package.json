@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "browser-process-hrtime": "0.0.2",
-    "fc": "^1.1.1",
+    "fc": "^1.2.0",
     "gl-clear": "0.0.1",
     "gl-fbo": "^2.0.2",
     "glsl-fxaa": "^2.1.0",
