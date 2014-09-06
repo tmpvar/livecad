@@ -37,7 +37,7 @@ function Renderable(gl, obj) {
   var features = [];
   for (var j = 0; j<featureCounts.length; j++) {
     var cur = featureCounts[j];
-    var featureArray = new Uint16Array(cur.length * 3);
+    var featureArray = Array(cur.length * 3);
 
     for (var k = 0; k<cur.length; k++) {
       var k3 = k*3;
@@ -70,8 +70,8 @@ Renderable.prototype.destroy = function() {
 };
 
 Renderable.prototype.render = function(gl, shader, color, recurse) {
-  shader.bind();
   shader.uniforms.color = color;
+  shader.uniforms.highlight = 0;
   this.vao.bind();
   this.vao.draw(gl.TRIANGLES, this.totalVerts/3);
   this.vao.unbind();
@@ -80,35 +80,57 @@ Renderable.prototype.render = function(gl, shader, color, recurse) {
 };
 
 Renderable.prototype.renderFeatures = function(gl, shader, color) {
+
   for (var i=0; i<this.features.length; i++) {
     if (this.features[i].selected) {
-      this.features[i].render(gl, shader, color);
+      this.features[i].render(gl, shader, color, true);
     }
   }
 };
 
 function Feature(gl, attributes, elements) {
   this.total = elements.length;
-  this.buffer = createBuffer(gl, elements, gl.ELEMENT_ARRAY_BUFFER);
+  this.buffers = [
+    createBuffer(gl, elements, gl.ELEMENT_ARRAY_BUFFER),
+    createBuffer(gl, elements.slice().reverse(), gl.ELEMENT_ARRAY_BUFFER)
+  ];
 
-  this.vao = createVAO(gl, attributes, this.buffer);
+  this.vaos = [
+    createVAO(gl, attributes, this.buffers[0]),
+    createVAO(gl, attributes, this.buffers[1])
+  ];
 };
 
 Feature.prototype.destroy = function() {
-  this.buffer.dispose();
-  this.vao.dispose();
+  this.buffers[0].dispose();
+  this.buffers[1].dispose();
+  this.vaos[0].dispose();
+  this.vaos[1].dispose();
 }
 
 Feature.prototype.selected = false;
 
-Feature.prototype.render = function(gl, shader, color) {
-  shader.bind();
-  shader.uniforms.color = color;
+Feature.prototype.render = function(gl, shader, color, disableDepth) {
 
-  this.vao.bind();
-  gl.disable(gl.DEPTH_TEST);
-  this.vao.draw(gl.TRIANGLES, this.total);
-  gl.enable(gl.DEPTH_TEST);
-  this.vao.unbind();
+  shader.uniforms.color = color;
+  shader.uniforms.highlight = 1;
+
+  if (disableDepth) {
+    gl.disable(gl.DEPTH_TEST);
+
+    this.vaos[0].bind();
+    this.vaos[0].draw(gl.TRIANGLES, this.total);
+    this.vaos[0].unbind();
+
+    this.vaos[1].bind();
+    this.vaos[1].draw(gl.TRIANGLES, this.total);
+    this.vaos[1].unbind();
+
+    gl.enable(gl.DEPTH_TEST);
+  } else {
+    this.vaos[0].bind();
+    this.vaos[0].draw(gl.TRIANGLES, this.total);
+    this.vaos[0].unbind();
+  }
 }
 

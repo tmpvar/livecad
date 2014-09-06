@@ -6,7 +6,7 @@ var mat4 = glm.mat4;
 var vec3 = glm.vec3;
 var createVAO = require('gl-vao');
 var createFBO = require('gl-fbo');
-var fxaa = require('./fxaa');
+//var fxaa = require('./fxaa');
 var fc = require('fc');
 var near = .1;
 var far = 1000;
@@ -236,11 +236,18 @@ function handleMouse(ev) {
 
 document.addEventListener('mouseup', function(ev) {
   renderDebouncer();
+  resetMousePicks();
   down = false;
 });
 
 // mouse picking state
 var pickedIndex = -1, pickedFeatureIndex = -1;
+
+function resetMousePicks() {
+  if (pickedIndex > -1 && pickedFeatureIndex > -1) {
+    renderables[pickedIndex].features[pickedFeatureIndex].selected = false;
+  }
+}
 
 document.addEventListener('mousemove', function(ev) {
   transformMouse(ev, currentPosition);
@@ -262,9 +269,7 @@ document.addEventListener('mousemove', function(ev) {
     lastPosition[1] = currentPosition[1];
   } else {
 
-    if (pickedIndex > -1 && pickedFeatureIndex > -1) {
-      renderables[pickedIndex].features[pickedFeatureIndex].selected = false;
-    }
+    resetMousePicks();
 
     pickedIndex = pickMouse(gl, currentPosition, renderables, setupRender);
 
