@@ -70,7 +70,12 @@ require('domready')(function() {
       methods.display = function() {
         var p = _display.apply(null, arguments)
         p(function(e, r) {
-          renderMesh(e, r);
+          if (e) {
+            // TODO: show an error
+            console.error('nothing to display');
+          } else {
+            renderMesh(e, r);
+          }
         });
         return p;
       };

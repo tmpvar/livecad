@@ -137,10 +137,13 @@ function createClient(stream, fn) {
               fn = args.pop();
             } else {
               fn = function(e, r) {
-
-                // TODO: this is where we could do interesting stuff
-                //       around auto-rendering and similar.
-                console.warn(name, 'resulted in', r);
+                if (e) {
+                  console.error(name, e);
+                } else {
+                  // TODO: this is where we could do interesting stuff
+                  //       around auto-rendering and similar.
+                  console.warn(name, 'resulted in', r);
+                }
               }
             }
           } else {
@@ -148,7 +151,11 @@ function createClient(stream, fn) {
           }
 
           var p = shape();
-          waitForArgs(args, function(e, r) {
+          waitForArgs(args, function argumentsSatisfiedCallback(e, r) {
+            if (e) {
+              return console.error('after waitForArgs', e);
+            }
+
             methods[method](r, p);
           });
 
