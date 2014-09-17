@@ -4,6 +4,7 @@
 //  - lazy evaluation
 //  - batching
 var oce = require('net-oce-protocol');
+var saveAs = require('browser-filesaver');
 
 module.exports = createClient;
 
@@ -129,7 +130,7 @@ function createClient(stream, fn) {
           if (typeof a === 'function' && a.name !== 'promise' && !fn) {
             return methods[method](null, function() {
               a.apply(null, arguments);
-            })
+            });
           } else if (!Array.isArray(a)) {
             args = [];
             Array.prototype.push.apply(args, arguments);
@@ -159,7 +160,11 @@ function createClient(stream, fn) {
             methods[method](r, p);
           });
 
-          p(fn || noop);
+          p(fn || function(err, result) {
+            if (system === 'export') {
+              saveAs(new Blob([result], {type: 'application/octet-binary'}), args[0]);
+            }
+          });
 
           return p;
         };

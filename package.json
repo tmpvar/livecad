@@ -9,6 +9,7 @@
     ]
   },
   "dependencies": {
+    "browser-filesaver": "^1.0.0",
     "browser-process-hrtime": "0.0.2",
     "fc": "^1.2.0",
     "gl-clear": "0.0.1",
