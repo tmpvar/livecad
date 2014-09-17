@@ -39,3 +39,7 @@ __note__: each operator will return a _new_ shape leaving the original unaffecte
 It is important to be able to display what you are building and modify the state of the editor. These functions allow you to do so
 
 * `display(shape)` or `display([shape1, shape2, ..])`
+
+### export
+
+* `stl(['filename.stl', shape1, shape2, ...])` - download the selected shapes as an stl file
