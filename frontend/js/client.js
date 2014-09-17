@@ -21,9 +21,9 @@ function waitForArgs(args, fn) {
   args.forEach(function(arg, i) {
     if (typeof arg === 'function') {
       arg(function waitForArgsListener(e, r) {
-        // TODO: don't throw!
+
         if (e) {
-          throw e;
+          return fn(e);
         }
 
         resolved[i] = r;
@@ -34,13 +34,13 @@ function waitForArgs(args, fn) {
         }
       })
     } else {
-      resolved[i] = args[i]
+      resolved[i] = args[i];
       pending--;
     }
   });
 
   // if we fell through immediately
-  if (!pending) {
+  if (pending <= 0) {
     fn(null, args);
   }
 }
