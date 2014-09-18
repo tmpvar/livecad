@@ -27,7 +27,8 @@ skateboard({
 
   oce.stderr.on('data', function(d) {
     d.toString().split('\n').forEach(function(line) {
-      console.log('>', line);
+      line = line.trim();
+      line && process.stdout.write('net-oce> ' + line.trim() + '\n');
     });
   });
 
