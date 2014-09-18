@@ -34,6 +34,19 @@ __note__: each operator will return a _new_ shape leaving the original unaffecte
 * `shape`.`union(shape2, shapeN..)` - combine shape..shapeN together and return a the result
 * `shape`.`intersect(shape2)` - returns a `shape` that represents the intersection between `shape` and `shape2`
 
+You can also use these operators without the chaining mechanism:
+
+```javascript
+var x = 100;
+var y = 0;
+var z = 0;
+
+display(
+  translate(cube(10), x, y, z)
+);
+
+```
+
 ### editor
 
 It is important to be able to display what you are building and modify the state of the editor. These functions allow you to do so

@@ -52,33 +52,30 @@ function waitForArgs(args, fn) {
   }
 }
 
+function addShapeMethods(p) {
+  // bake shape methods onto the resulting future
+  shapeMethods.forEach(function(method) {
+    p[method.name] = function() {
+      var s = future();
+
+      waitForArgs(varargs(arguments), function(e, resolvedArgs) {
+        p(function(e, result) {
+          if (e) throw e;
+          resolvedArgs.unshift(result);
+          method.fn(resolvedArgs, s);
+        });
+      });
+
+      return addShapeMethods(s);
+    };
+  });
+
+  // sugar
+  return p;
+}
+
 var shapeMethods = [];
 var realized = 0;
-// TODO: error handling
-function shape() {
-  var promise = future();
-
-  for (var j=0; j<shapeMethods.length; j++) {
-    (function(method) {
-      promise[method.name] = function() {
-        var args = varargs(arguments);
-        var s = shape();
-
-        waitForArgs(args, function(e, resolvedArgs) {
-          promise(function(e, result) {
-            if (e) throw e;
-            resolvedArgs.unshift(result);
-            method.fn(resolvedArgs, s);
-          });
-        });
-
-        return s;
-      };
-    })(shapeMethods[j])
-  }
-
-  return promise;
-}
 
 function createClient(stream, fn) {
 
@@ -99,11 +96,27 @@ function createClient(stream, fn) {
           name : name,
           fn : methods[method]
         });
+
+        // standalone ops (e.g. `translate(cube(10), 100, 100, 10)` )
+        commands[name] = function() {
+          var p = future();
+
+          waitForArgs(varargs(arguments), function(e, resolvedArgs) {
+            if (e) {
+              return p(e);
+            }
+
+            methods[method](resolvedArgs, p);
+          });
+
+          return addShapeMethods(p);
+        }
+
       } else if (system === 'prim') {
         commands[name] = function() {
-          var p = shape();
+          var p = future();
           methods[method](varargs(arguments), p);
-          return p;
+          return addShapeMethods(p);
         };
       } else { // state, extract, export, etc..
         commands[name] = function(a, fn) {
@@ -129,7 +142,7 @@ function createClient(stream, fn) {
             args = a;
           }
 
-          var p = shape();
+          var p = future();
           waitForArgs(args, function argumentsSatisfiedCallback(e, r) {
             if (e) {
               return console.error('after waitForArgs', e);
