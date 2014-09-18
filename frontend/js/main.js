@@ -68,6 +68,8 @@ require('domready')(function() {
       // hijack extract_verts
       var _display = methods.display;
       methods.display = function() {
+        _gaq && _gaq.push(['_trackEvent', 'net-oce', 'display', arguments.length]);
+
         var p = _display.apply(null, arguments)
         p(function(e, r) {
           if (e) {
@@ -131,6 +133,8 @@ require('domready')(function() {
       jse.editor._handlers.change[0]();
 
       jse.on('valid', function(valid) {
+        _gaq && _gaq.push(['_trackEvent', 'Editor', 'Change', valid ? 'valid' : 'invalid']);
+
         var els = qel('.code-error-message', null, true), l = els.length;
         for (var i=0; i<l; i++) {
           els[i].parentNode.removeChild(els[i]);
