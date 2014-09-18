@@ -5,10 +5,17 @@
 //  - batching
 var oce = require('net-oce-protocol');
 var saveAs = require('browser-filesaver');
+var future = require('tmpvar-future');
 
 module.exports = createClient;
 
 function noop() { console.log('NOOP', arguments); }
+
+function varargs(args) {
+  var a = [];
+  Array.prototype.push.apply(a, args);
+  return a;
+}
 
 function waitForArgs(args, fn) {
   if (!args || !args.length) {
@@ -49,35 +56,12 @@ var shapeMethods = [];
 var realized = 0;
 // TODO: error handling
 function shape() {
-
-  var watchers = [];
-  var resolved;
-  var value;
-
-  function promise(err, val) {
-
-    if (typeof err === 'function') {
-      if (!resolved) {
-        watchers.push(err);
-      } else {
-        err(null, value);
-      }
-    } else {
-      process.nextTick(function() {
-        resolved = true;
-        value = val;
-        for (var i=0; i<watchers.length; i++) {
-          watchers[i](err, val);
-        }
-      });
-    }
-  }
+  var promise = future();
 
   for (var j=0; j<shapeMethods.length; j++) {
     (function(method) {
       promise[method.name] = function() {
-        var args = [];
-        Array.prototype.push.apply(args, arguments);
+        var args = varargs(arguments);
         var s = shape();
 
         waitForArgs(args, function(e, resolvedArgs) {
@@ -117,23 +101,17 @@ function createClient(stream, fn) {
         });
       } else if (system === 'prim') {
         commands[name] = function() {
-          var args = [];
-          Array.prototype.push.apply(args, arguments);
           var p = shape();
-          methods[method](args, p);
+          methods[method](varargs(arguments), p);
           return p;
         };
       } else { // state, extract, export, etc..
         commands[name] = function(a, fn) {
-
           var args;
-          if (typeof a === 'function' && a.name !== 'promise' && !fn) {
-            return methods[method](null, function() {
-              a.apply(null, arguments);
-            });
+          if (typeof a === 'function' && !a.isFuture && !fn) {
+            return methods[method](null, a);
           } else if (!Array.isArray(a)) {
-            args = [];
-            Array.prototype.push.apply(args, arguments);
+            args = varargs(arguments);
             if (args.length > 1) {
               fn = args.pop();
             } else {

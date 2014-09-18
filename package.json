@@ -19,6 +19,7 @@
     "onecolor": "^2.4.2",
     "qel": "^1.0.0",
     "skateboard": "^0.2.9",
+    "tmpvar-future": "^1.1.0",
     "workerify": "^0.3.0",
     "workerstream": "^1.2.1"
   },
