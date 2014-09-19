@@ -152,7 +152,7 @@ function createClient(stream, fn) {
                 //       around auto-rendering and similar.
                 //
                 //       will probably need to figure out which shapes
-                //       have no dependents and automatically push those
+                //       have no dependants and automatically push those
                 //       to display() if a call does not exist (from AST)
                 console.warn(name, 'resulted in', r);
               }
