@@ -135,6 +135,11 @@ function createClient(stream, fn) {
             fn = args.pop();
 
           } else if (system === 'export') {
+
+            if (Array.isArray(args[1])) {
+              args = [args[0]].concat(args[1]);
+            }
+
             fn = function exportCallback(e, r) {
               saveAs(new Blob([r], {type: 'application/octet-binary'}), args[0]);
             };

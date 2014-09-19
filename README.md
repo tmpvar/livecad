@@ -36,7 +36,7 @@ __note__: each operator will return a _new_ shape leaving the original unaffecte
 
 You can also use these operators without the chaining mechanism:
 
-```javascript
+```javascript/
 var x = 100;
 var y = 0;
 var z = 0;
@@ -55,4 +55,17 @@ It is important to be able to display what you are building and modify the state
 
 ### export
 
-* `stl(['filename.stl', shape1, shape2, ...])` - download the selected shapes as an stl file
+* `stl('filename.stl', shape1, shape2, ...)` - download the selected shapes as an stl file
+
+_note_: you can also pass an array of shapes as the second arg
+
+```javascript
+
+var shapes = [
+  cube(10),
+  cube(10).translate(20, 0, 0)
+];
+
+stl('filename.stl', shapes);
+
+```
