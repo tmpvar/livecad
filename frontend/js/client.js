@@ -119,27 +119,39 @@ function createClient(stream, fn) {
           return addShapeMethods(p);
         };
       } else { // state, extract, export, etc..
-        commands[name] = function(a, fn) {
+        commands[name] = function(a) {
           var args;
-          if (typeof a === 'function' && !a.isFuture && !fn) {
-            return methods[method](null, a);
-          } else if (!Array.isArray(a)) {
+
+          if (!Array.isArray(a)) {
             args = varargs(arguments);
-            if (args.length > 1) {
-              fn = args.pop();
-            } else {
-              fn = function(e, r) {
-                if (e) {
-                  console.error(name, e);
-                } else {
-                  // TODO: this is where we could do interesting stuff
-                  //       around auto-rendering and similar.
-                  console.warn(name, 'resulted in', r);
-                }
-              }
-            }
           } else {
             args = a;
+          }
+
+          var l = args.length;
+          var lastArg = args[l-1];
+
+          if (typeof lastArg === 'function' && !lastArg.isFuture) {
+            fn = args.pop();
+
+          } else if (system === 'export') {
+            fn = function exportCallback(e, r) {
+              saveAs(new Blob([r], {type: 'application/octet-binary'}), args[0]);
+            };
+          } else {
+            fn = function defaultCallback(e, r) {
+              if (e) {
+                console.error(name, e);
+              } else {
+                // TODO: this is where we could do interesting stuff
+                //       around auto-rendering and similar.
+                //
+                //       will probably need to figure out which shapes
+                //       have no dependents and automatically push those
+                //       to display() if a call does not exist (from AST)
+                console.warn(name, 'resulted in', r);
+              }
+            }
           }
 
           var p = future();
@@ -151,11 +163,7 @@ function createClient(stream, fn) {
             methods[method](r, p);
           });
 
-          p(fn || function(err, result) {
-            if (system === 'export') {
-              saveAs(new Blob([result], {type: 'application/octet-binary'}), args[0]);
-            }
-          });
+          p(fn);
 
           return p;
         };
