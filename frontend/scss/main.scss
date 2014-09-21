@@ -19,3 +19,7 @@ body { overflow: hidden; } // disable overscroll on osx
   border-bottom-right-radius: 10px;
   padding: 2px 10px;
 }
+
+.hovered {
+  border-bottom: 1px solid white;
+}

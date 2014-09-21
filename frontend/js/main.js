@@ -60,7 +60,7 @@ require('domready')(function() {
       }, 1000);
     });
 
-    createClient(stream, function(err, methods) {
+    createClient(stream, function(err, methods, wrapper) {
       var header = Object.keys(methods).map(function(name) {
         return 'var ' + name + ' = ' + 'ops.' + name + ';';
       });
@@ -106,14 +106,20 @@ require('domready')(function() {
         }
       }
 
+      var evilMethodUsage;
+
       function evil (text) {
 
         try {
-          generate()
+          var fn = generate()
             ('function(){')
               (header.join(';'))
               (text)
-            ('}').toFunction({ops:methods})()
+            ('}').toFunction({ops:methods});
+
+          wrapper(fn, function(e, usage) {
+            evilMethodUsage = usage;
+          });
 
         } catch (e) {
           var matches = e.stack.match(/anonymous>:(\d*):(\d*)/);
@@ -132,6 +138,82 @@ require('domready')(function() {
 
       jse.editor._handlers.change[0]();
 
+      var codeMirrorEl = qel('.CodeMirror');
+
+      function getLine(span) {
+        var line = span.parentNode.parentNode;
+        var where = 0;
+        while(line.previousSibling) {
+          line = line.previousSibling;
+          where++;
+        }
+        return where;
+      }
+
+      function getColumn(span) {
+
+        var c = 0;
+        var pre = span.parentNode;
+        var children = pre.childNodes;
+
+        for (var i=0; i<children.length; i++) {
+          var child = children[i];
+          if (span === child) {
+            break;
+          }
+          c += child.textContent.length;
+        }
+
+        return c;
+      }
+
+      codeMirrorEl.addEventListener('mousemove', function(e) {
+        var el = e.target;
+
+        var hovered = qel('.hovered', codeMirrorEl, true);
+        var c = hovered.length;
+        var alreadyHovered = el.className.indexOf('hovered') > -1;
+        while(c--) {
+          if (hovered[c] === el) {
+            continue;
+          }
+          hovered[c].className = hovered[c].className.replace(/ *hovered */g, '');
+        }
+
+        if (alreadyHovered) {
+          return;
+        }
+
+        if (el.className.indexOf('variable') > -1 || el.className.indexOf('property') > -1) {
+          var name = el.textContent;
+
+          if (methods[name]) {
+            var line = getLine(el);
+            var col = getColumn(el);
+
+            if (evilMethodUsage && evilMethodUsage[line]) {
+
+              var evilLine = evilMethodUsage[line];
+
+              // match with the text
+              for (var i=0; i<evilLine.length; i++) {
+                if (evilLine[i]._column === col) {
+
+                  // TODO: kick off a `display` with this shape id
+                  break;
+                }
+              }
+
+            }
+          }
+          el.className += ' hovered';
+        }
+
+        // TODO: consider allowing hover of lines
+        // TODO: consider hover of loops
+
+      });
+
       jse.on('valid', function(valid) {
         typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
 
@@ -143,6 +225,7 @@ require('domready')(function() {
         if (valid) {
           var text = jse.getValue();
           localStorage.setItem('text', text);
+
           methods.reset(function() {
             evil(text)
             appendErrorLines();

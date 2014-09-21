@@ -5,9 +5,30 @@
 //  - batching
 var oce = require('net-oce-protocol');
 var saveAs = require('browser-filesaver');
-var future = require('tmpvar-future');
+var _future = require('tmpvar-future');
 
 module.exports = createClient;
+
+var usage;
+function future() {
+  var f = _future.apply(null, arguments);
+
+  var currentLine = (new Error()).stack.split('\n')[3];
+  if (usage && currentLine.indexOf('<anonymous>') > -1) {
+    var parts = currentLine.split(':');
+    var col = Math.max(parseInt(parts.pop(), 10) - 3, 0);
+    var line = parseInt(parts.pop(), 10) - 5;
+
+    f._column = col;
+
+    if (!usage[line]) {
+      usage[line] = [f];
+    } else {
+      usage[line].push(f);
+    }
+  }
+  return f;
+}
 
 function noop() { console.log('NOOP', arguments); }
 
@@ -72,6 +93,13 @@ function addShapeMethods(p) {
 
   // sugar
   return p;
+}
+
+function evalWrapper(fn, cb) {
+  usage = {};
+  fn();
+  console.log(usage);
+  cb(null, usage);
 }
 
 var shapeMethods = [];
@@ -175,6 +203,6 @@ function createClient(stream, fn) {
       }
     });
 
-    fn(null, commands);
+    fn(null, commands, evalWrapper);
   });
 }
