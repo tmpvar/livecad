@@ -52,10 +52,6 @@ require('domready')(function() {
   // fix "cursor is off the end of the line on last line" issue #29
   jse.editor.refresh();
 
-  // Hack around protocol-buffers and their magical
-  // function generation.
-  window.Buffer = Buffer;
-
   skateboard(function(stream) {
     stream.socket.addEventListener('close', function() {
       setTimeout(function() {
