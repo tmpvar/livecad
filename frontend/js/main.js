@@ -215,11 +215,8 @@ require('domready')(function() {
                     // TODO: Allow more than one mesh to be rendered.
                     future._displayFuture(addHelperMesh);
                   });
-
-                  break;
                 }
               }
-
             }
 
             el.className += ' hovered';
