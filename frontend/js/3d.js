@@ -13,57 +13,37 @@ var far = 1000;
 var fov = Math.PI/4.0;
 var Renderable = require('./renderable');
 var hsl = require('./hsl');
+var lerpCameraTo = require('./lerp-camera-to');
 
 var pickMouse = require('./picker');
 
-module.exports = setMesh;
+module.exports = {
+  setMesh: setMesh,
+  addHelperMesh:  addHelperMesh,
+  clearHelperMeshes: clearHelperMeshes
+};
 
-function isNear(a, b, thresh) {
-  return Math.abs(a-b) < (thresh || .1);
+var helperMeshes = [];
+function addHelperMesh(e, b) {
+  renderDebouncer();
+
+  if (!Array.isArray(b)) {
+    b = [b];
+  }
+
+  var l = b.length;
+  for (var i=0; i<l; i++) {
+    var r = new Renderable(gl, b[i]);
+    helperMeshes.push(r);
+  }
+}
+
+function clearHelperMeshes() {
+  helperMeshes = [];
 }
 
 var cameraCenter = [0,0,0], cameraDistance = 200;
-function lerpCameraTo(camera, dt) {
-  var feel = dt/100;
 
-  if (cameraDistance && !isNear(camera.distance, cameraDistance)) {
-    camera.distance += (cameraDistance - camera.distance) * feel;
-    if (isNear(camera.distance, cameraDistance)) {
-      cameraDistance = 0;
-    }
-  } else {
-    cameraDistance = 0;
-  }
-
-  var cc = camera.center;
-
-  if (cameraCenter) {
-    if (
-      !isNear(cc[0], cameraCenter[0]) ||
-      !isNear(cc[1], cameraCenter[1]) ||
-      !isNear(cc[2], cameraCenter[2])
-    ) {
-      cc[0] += (cameraCenter[0] - cc[0]) * feel;
-      cc[1] += (cameraCenter[1] - cc[1]) * feel;
-      cc[2] += (cameraCenter[2] - cc[2]) * feel;
-
-      if (
-        isNear(cc[0], cameraCenter[0]) &&
-        isNear(cc[1], cameraCenter[1]) &&
-        isNear(cc[2], cameraCenter[2])
-      ) {
-        cameraCenter = null;
-      }
-
-    } else {
-      cameraCenter = null;
-    }
-  }
-
-  if (cameraCenter || cameraDistance) {
-    renderDebouncer();
-  }
-}
 
 var min = Math.min;
 var max = Math.max;
@@ -161,6 +141,15 @@ function renderRenderables(gl, shader) {
       renderables[i].render(gl, shader, color, true);
     }
   }
+
+  if (helperMeshes.length) {
+    var l = helperMeshes.length;
+    for (var i=0; i<l; i++) {
+      helperMeshes[i].render(gl, shader, [1.0, .24, .02, 0.1], true);
+    }
+  }
+
+
 }
 
 
@@ -176,7 +165,9 @@ var gl = fc(function render(t) {
   setupRender(gl, shader);
   renderRenderables(gl, shader);
 
-  lerpCameraTo(camera, t);
+  if (lerpCameraTo(camera, cameraCenter, cameraDistance, t)) {
+    renderDebouncer();
+  }
 
 }, false, 3);
 

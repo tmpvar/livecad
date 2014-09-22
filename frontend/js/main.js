@@ -3,9 +3,12 @@ var generate = require('generate-function');
 var createClient = require('./client');
 var qel = require('qel');
 
-require('domready')(function() {
+var threedee = require('./3d');
+var setMesh = threedee.setMesh;
+var addHelperMesh = threedee.addHelperMesh;
+var clearHelperMeshes = threedee.clearHelperMeshes;
 
-  var renderMesh = require('./3d');
+require('domready')(function() {
 
   var value = localStorage.getItem('text') || [
     'var distanceBetweenHoles = 31;',
@@ -76,7 +79,7 @@ require('domready')(function() {
             // TODO: show an error
             console.error('nothing to display');
           } else {
-            renderMesh(e, r);
+            setMesh(e, r);
           }
         });
         return p;
@@ -184,6 +187,8 @@ require('domready')(function() {
           return;
         }
 
+        clearHelperMeshes();
+
         if (el.className.indexOf('variable') > -1 || el.className.indexOf('property') > -1) {
           var name = el.textContent;
 
@@ -203,11 +208,12 @@ require('domready')(function() {
 
                   future(function(e, r) {
                     if (!future._displayFuture) {
-                      future._displayFuture = methods.display(r);
+                      typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
+                      future._displayFuture = _display(r);
                     }
 
                     // TODO: Allow more than one mesh to be rendered.
-                    future._displayFuture(renderMesh);
+                    future._displayFuture(addHelperMesh);
                   });
 
                   break;
