@@ -27,9 +27,9 @@ function pickMouse(gl, mouse, objects, fn) {
   if (!shader) {
     shader = createShader(gl);
     fbo = createFBO(gl, [gl.canvas.width, gl.canvas.height]);
-    resolution[0] = gl.canvas.width;
-    resolution[1] = gl.canvas.height;
-  } else if (resolution[0] !== gl.canvas.width || resolution[1] !== gl.canvas.height) {
+  }
+
+  if (resolution[0] !== gl.canvas.width || resolution[1] !== gl.canvas.height) {
     resolution[0] = gl.canvas.width;
     resolution[1] = gl.canvas.height;
     fbo.shape = resolution;
