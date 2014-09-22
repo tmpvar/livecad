@@ -215,8 +215,10 @@ require('domready')(function() {
               }
 
             }
+
+            el.className += ' hovered';
           }
-          el.className += ' hovered';
+
         }
 
         // TODO: consider allowing hover of lines

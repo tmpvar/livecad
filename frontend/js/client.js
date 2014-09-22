@@ -16,7 +16,7 @@ function future() {
   var currentLine = (new Error()).stack.split('\n')[3];
   if (usage && currentLine.indexOf('<anonymous>') > -1) {
     var parts = currentLine.split(':');
-    var col = Math.max(col - 3, parseInt(parts.pop(), 10))
+    var col = Math.max(0, parseInt(parts.pop(), 10) - 3)
     var line = parseInt(parts.pop(), 10) - 6;
 
     f._column = col;
