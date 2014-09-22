@@ -98,7 +98,6 @@ function addShapeMethods(p) {
 function evalWrapper(fn, cb) {
   usage = {};
   fn();
-  console.log(usage);
   cb(null, usage);
 }
 
