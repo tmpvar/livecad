@@ -113,7 +113,7 @@ require('domready')(function() {
         try {
           var fn = generate()
             ('function(){')
-              (header.join(';'))
+              (header.join(';') + '\n')
               (text)
             ('}').toFunction({ops:methods});
 
@@ -197,9 +197,19 @@ require('domready')(function() {
 
               // match with the text
               for (var i=0; i<evilLine.length; i++) {
-                if (evilLine[i]._column === col) {
 
-                  // TODO: kick off a `display` with this shape id
+                if (Math.abs(evilLine[i]._column - col) <= 2) {
+                  var future = evilLine[i];
+
+                  future(function(e, r) {
+                    if (!future._displayFuture) {
+                      future._displayFuture = methods.display(r);
+                    }
+
+                    // TODO: Allow more than one mesh to be rendered.
+                    future._displayFuture(renderMesh);
+                  });
+
                   break;
                 }
               }
