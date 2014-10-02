@@ -30,8 +30,8 @@ __note__: each operator will return a _new_ shape leaving the original unaffecte
 
 * `shape`.`translate(x, y, z)`
 * `shape`.`rotate(x, y, z)` - in degrees
-* `shape`.`cut(shape2)` - remove shape 2 from `shape`
-* `shape`.`union(shape2, shapeN..)` - combine shape..shapeN together and return a the result
+* `shape`.`cut(shape2, shapeN..)` - remove shape2..shapeN from `shape`
+* `shape`.`union(shape2, shapeN..)` - combine shape2..shapeN together and return a the result
 * `shape`.`intersect(shape2)` - returns a `shape` that represents the intersection between `shape` and `shape2`
 
 You can also use these operators without the chaining mechanism:
