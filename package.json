@@ -20,6 +20,7 @@
     "qel": "^1.0.0",
     "skateboard": "^0.2.9",
     "tmpvar-future": "^1.1.0",
+    "tmpvar-future-wait": "^1.0.0",
     "workerify": "^0.3.0",
     "workerstream": "^1.2.1"
   },
