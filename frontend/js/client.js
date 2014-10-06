@@ -6,7 +6,7 @@
 var oce = require('net-oce-protocol');
 var saveAs = require('browser-filesaver');
 var _future = require('tmpvar-future');
-
+var waitForArgs = require('tmpvar-future-wait');
 module.exports = createClient;
 
 var usage;
@@ -36,41 +36,6 @@ function varargs(args) {
   var a = [];
   Array.prototype.push.apply(a, args);
   return a;
-}
-
-function waitForArgs(args, fn) {
-  if (!args || !args.length) {
-    return fn(null, args);
-  }
-
-  var resolved = Array(args.length);
-
-  var pending = args.length;
-  args.forEach(function(arg, i) {
-    if (typeof arg === 'function') {
-      arg(function waitForArgsListener(e, r) {
-
-        if (e) {
-          return fn(e);
-        }
-
-        resolved[i] = r;
-
-        pending--;
-        if (pending <= 0) {
-          fn(null, resolved);
-        }
-      })
-    } else {
-      resolved[i] = args[i];
-      pending--;
-    }
-  });
-
-  // if we fell through immediately
-  if (pending <= 0) {
-    fn(null, args);
-  }
 }
 
 function addShapeMethods(p) {
