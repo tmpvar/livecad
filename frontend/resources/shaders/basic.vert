@@ -16,5 +16,7 @@ void main() {
     gl_Position = (projection * view * model * vec4(position, 1.0));// + vec4(vNormal * vec3(2), 1.0);
   }
 
+  gl_PointSize = 100.0;
+
   camera = eye;
 }

@@ -4,7 +4,6 @@ var createOrbitCamera = require("orbit-camera");
 var glm = require("gl-matrix");
 var mat4 = glm.mat4;
 var vec3 = glm.vec3;
-var createVAO = require('gl-vao');
 var createFBO = require('gl-fbo');
 //var fxaa = require('./fxaa');
 var fc = require('fc');
