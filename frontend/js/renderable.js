@@ -1,9 +1,45 @@
 var createBuffer = require('gl-buffer');
 var createVAO = require('gl-vao');
 var subdivideArc = require('subdivide-arc');
+var subdivideEllipse = require('ellipse-component');
+
 var glm = require('gl-matrix');
 var mat4 = glm.mat4;
 var vec3 = glm.vec3;
+var quat = glm.quat;
+
+// TODO: ripped from a later version of gl-matrix
+quat.rotationTo = (function() {
+  var tmpvec3 = vec3.create();
+  var xUnitVec3 = vec3.fromValues(1,0,0);
+  var yUnitVec3 = vec3.fromValues(0,0,1);
+
+  return function(out, a, b) {
+      var dot = vec3.dot(a, b);
+      if (dot < -0.999999) {
+          vec3.cross(tmpvec3, xUnitVec3, a);
+          if (vec3.length(tmpvec3) < 0.000001)
+              vec3.cross(tmpvec3, yUnitVec3, a);
+          vec3.normalize(tmpvec3, tmpvec3);
+          quat.setAxisAngle(out, tmpvec3, Math.PI);
+          return out;
+      } else if (dot > 0.999999) {
+          out[0] = 0;
+          out[1] = 0;
+          out[2] = 0;
+          out[3] = 1;
+          return out;
+      } else {
+          vec3.cross(tmpvec3, a, b);
+          out[0] = tmpvec3[0];
+          out[1] = tmpvec3[1];
+          out[2] = tmpvec3[2];
+          out[3] = 1 + dot;
+          return quat.normalize(out, out);
+      }
+  };
+})();
+
 
 var m4scratch = mat4.create();
 var v3scratch1 = vec3.create();
@@ -13,6 +49,36 @@ var yup = [0, 1, 0];
 
 window.vec3 = vec3;
 module.exports = Renderable;
+
+function appendConicSegments(segments, points, part) {
+  mat4.identity(m4scratch);
+
+  var perp = [part.normal[0], part.normal[2], part.normal[1]];
+
+  mat4.identity(m4scratch);
+  mat4.translate(m4scratch, m4scratch, part.center);
+
+  var qscratch = quat.create();
+
+  quat.rotationTo(qscratch, [0, 0, 1], part.normal);
+
+  points.map(function(point) {
+    point.push(0);
+    vec3.transformQuat(
+      v3scratch1,
+      point,
+      qscratch
+    );
+
+    return vec3.transformMat4(point, v3scratch1, m4scratch);
+
+  }).map(function(point, i, a) {
+    // create individual segments
+    var prev = i==0 ? a[a.length-1] : a[i-1];
+    segments.push(prev[0], prev[1], prev[2]);
+    segments.push(point[0], point[1], point[2]);
+  });
+}
 
 function Renderable(gl, obj) {
   this.totalVerts = obj.positions.length;
@@ -38,48 +104,43 @@ function Renderable(gl, obj) {
     edge.map(function(parts) {
 
       parts.map(function(part) {
-
-        // line
-        if (part.start && part.end) {
-          segments.push(
-            part.start[0], part.start[1], part.start[2],
-            part.end[0], part.end[1], part.end[2]
-          );
-
-        // circle
-        } else if (part.center) {
-          // setup a matrix so we can transform the points coming off of
-          // subdivide-arc
-
-          mat4.identity(m4scratch);
-          mat4.translate(m4scratch, m4scratch, part.center);
-          var perp = [part.normal[0], part.normal[2], part.normal[1]];
-
-          mat4.rotate(
-            m4scratch,
-            m4scratch,
-            Math.PI/2,
-            vec3.cross(v3scratch1, yup, part.normal)
-          );
-
-          var points = subdivideArc(0, 0, part.radius, 0, Math.PI*2, 50)
-          points.map(function(point) {
-
-            point.push(point[1]);
-            point[1] = 0;
-
-            return vec3.transformMat4(
-              point,
-              point,
-              m4scratch
+        switch (part.type) {
+          case 'line':
+            segments.push(
+              part.start[0], part.start[1], part.start[2],
+              part.end[0], part.end[1], part.end[2]
             );
+          break;
 
-          }).map(function(point, i, a) {
-            // create individual segments
-            var prev = i==0 ? a[a.length-1] : a[i-1];
-            segments.push(prev[0], prev[1], prev[2]);
-            segments.push(point[0], point[1], point[2]);
-          });
+          case 'circle':
+            // setup a matrix so we can transform the points coming off of
+            // subdivide-arc
+
+            var points = subdivideArc(0, 0, part.radius, 0, Math.PI*2, 50)
+            appendConicSegments(segments, points, part);
+          break;
+
+          case 'ellipse':
+            var points = subdivideEllipse(
+              part.minor_radius * 2,
+              part.major_radius * 2,
+              50
+            ).map(function(p) {
+              // ellipse-component decided it would be good if ellipsis
+              // were oriented by the top corner.  NBD, we'll just move
+              // it over by the appropriate radii
+              return [p.x - part.minor_radius, p.y - part.major_radius];
+            });
+
+            appendConicSegments(segments, points, part);
+
+          break;
+
+
+          default:
+            console.log('unhandled part.type', part.type);
+          break;
+
         }
       });
     });
@@ -150,6 +211,10 @@ Renderable.prototype.render = function(gl, shader, color, recurse) {
   this.vao.unbind();
 
   recurse && this.renderFeatures(gl, shader, [1, 0, 0, 1]);
+
+  for (var i=0; i<this.edges.length; i++) {
+    this.edges[i].render(gl, shader, [0, 0, 0, 1]);
+  }
 };
 
 Renderable.prototype.renderFeatures = function(gl, shader, color) {
@@ -157,10 +222,6 @@ Renderable.prototype.renderFeatures = function(gl, shader, color) {
     if (this.features[i].selected) {
       this.features[i].render(gl, shader, color, true);
     }
-  }
-
-  for (var i=0; i<this.edges.length; i++) {
-    this.edges[i].render(gl, shader, color, true);
   }
 };
 
@@ -183,7 +244,7 @@ Edge.prototype.render = function(gl, shader, color, disableDepth) {
   shader.uniforms.color = color;
   shader.uniforms.highlight = 1;
   shader.uniforms.moveTowardCamera = 1;
-  gl.lineWidth(2);
+  gl.lineWidth(1);
   disableDepth && gl.disable(gl.DEPTH_TEST);
   this.vao.bind();
   this.vao.draw(gl.LINES, this.total);
