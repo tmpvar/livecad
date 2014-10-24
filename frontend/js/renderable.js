@@ -180,25 +180,16 @@ Edge.prototype.destroy = function() {
 };
 
 Edge.prototype.render = function(gl, shader, color, disableDepth) {
-  shader.uniforms.color = [1,1,1,1];
+  shader.uniforms.color = color;
   shader.uniforms.highlight = 1;
-
+  shader.uniforms.moveTowardCamera = 1;
+  gl.lineWidth(2);
   disableDepth && gl.disable(gl.DEPTH_TEST);
   this.vao.bind();
   this.vao.draw(gl.LINES, this.total);
   this.vao.unbind();
   disableDepth && gl.enable(gl.DEPTH_TEST);
-
-
-  shader.uniforms.color = [1,0, 0,1];
-  shader.uniforms.highlight = 1;
-
-  disableDepth && gl.disable(gl.DEPTH_TEST);
-  this.vao.bind();
-  this.vao.draw(gl.POINTS, this.total/2);
-  this.vao.unbind();
-  disableDepth && gl.enable(gl.DEPTH_TEST);
-
+  shader.uniforms.moveTowardCamera = 0;
 }
 
 function Feature(gl, attributes, elements) {
