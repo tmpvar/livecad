@@ -217,7 +217,7 @@ Feature.prototype.selected = false;
 Feature.prototype.render = function(gl, shader, color, disableDepth) {
 
   shader.uniforms.color = color;
-  shader.uniforms.highlight = 1;
+  shader.uniforms.highlight = 0;
 
   disableDepth && gl.disable(gl.DEPTH_TEST);
 
