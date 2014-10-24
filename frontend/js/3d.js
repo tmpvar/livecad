@@ -158,6 +158,8 @@ var gl = fc(function render(t) {
 
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
+  gl.depthMask(true);
+  gl.depthFunc(gl.LEQUAL);
 
   clear(gl);
 
