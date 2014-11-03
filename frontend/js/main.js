@@ -68,7 +68,6 @@ require('domready')(function() {
       var _display = methods.display;
       methods.display = function() {
         typeof ga === 'function' && ga('send', 'event', 'net-oce', 'display', arguments.length);
-
         var p = _display.apply(null, arguments)
         p(function(e, r) {
           if (e) {

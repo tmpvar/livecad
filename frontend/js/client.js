@@ -9,8 +9,9 @@ var _future = require('tmpvar-future');
 var waitForArgs = require('tmpvar-future-wait');
 module.exports = createClient;
 
-var usage;
+var usage, shapeId = 1;
 function future() {
+
   var f = _future.apply(null, arguments);
 
   var currentLine = (new Error()).stack.split('\n')[3];
@@ -18,6 +19,7 @@ function future() {
     var parts = currentLine.split(':');
     var col = Math.max(0, parseInt(parts.pop(), 10) - 3)
     var line = parseInt(parts.pop(), 10) - 6;
+
 
     f._column = col;
 
@@ -42,7 +44,10 @@ function addShapeMethods(p) {
   // bake shape methods onto the resulting future
   shapeMethods.forEach(function(method) {
     p[method.name] = function() {
+
       var s = future();
+
+      s._shapeId = shapeId++;
 
       waitForArgs(varargs(arguments), function(e, resolvedArgs) {
         p(function(e, result) {
@@ -51,6 +56,10 @@ function addShapeMethods(p) {
           method.fn(resolvedArgs, s);
         });
       });
+
+      // resolve immediately to avoid
+      // bogging down the future pipeline
+      s(null, { id: s._shapeId });
 
       return addShapeMethods(s);
     };
@@ -107,13 +116,19 @@ function createClient(stream, fn) {
       } else if (system === 'prim') {
         commands[name] = function() {
           var p = future();
+
+          p._shapeId = shapeId++;
           methods[method](varargs(arguments), p);
+
+          // resolve immediately to avoid
+          // bogging down the future pipeline
+          p(null, { id: p._shapeId });
+
           return addShapeMethods(p);
         };
       } else { // state, extract, export, etc..
         commands[name] = function(a) {
           var args;
-
           if (!Array.isArray(a)) {
             args = varargs(arguments);
           } else {
