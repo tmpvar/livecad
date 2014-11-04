@@ -98,7 +98,9 @@ function createClient(stream, fn) {
 
         // standalone ops (e.g. `translate(cube(10), 100, 100, 10)` )
         commands[name] = function() {
-          var p = waitForArgs(varargs(arguments), function(e, resolvedArgs) {
+          var p = future();
+
+          waitForArgs(varargs(arguments), function(e, resolvedArgs) {
             if (e) {
               return p(e);
             }
@@ -162,7 +164,8 @@ function createClient(stream, fn) {
             }
           }
 
-          var p = waitForArgs(args, function argumentsSatisfiedCallback(e, r) {
+          var p = future();
+          waitForArgs(args, function argumentsSatisfiedCallback(e, r) {
             if (e) {
               return console.error('after waitForArgs', e);
             }
