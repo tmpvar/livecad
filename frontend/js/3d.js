@@ -148,9 +148,7 @@ function renderRenderables(gl, shader) {
     }
   }
 
-
 }
-
 
 var gl = fc(function render(t) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -202,7 +200,7 @@ function transformMouse(ev, out) {
 function handleMouse(ev) {
   ev.preventDefault();
 
-  cameraCenter = null;
+//cameraCenter = null;
   cameraDistance = null;
 
   switch (ev.type) {
@@ -249,13 +247,22 @@ document.addEventListener('mousemove', function(ev) {
     var w = gl.canvas.width;
     var h = gl.canvas.height;
 
-    camera.rotate([
-      currentPosition[0]/w-0.5,
-      currentPosition[1]/h-0.5
-    ],[
-      lastPosition[0]/w-0.5,
-      lastPosition[1]/h-0.5
-    ])
+    if (ev.altKey) {
+      cameraCenter = [
+       -(currentPosition[0] - lastPosition[0]) + cameraCenter[0],
+        (currentPosition[1] - lastPosition[1]) + cameraCenter[1],
+        cameraCenter[2]
+      ];
+    }
+    else {
+      camera.rotate([
+        currentPosition[0]/w-0.5,
+        currentPosition[1]/h-0.5
+       ],[
+        lastPosition[0]/w-0.5,
+        lastPosition[1]/h-0.5
+       ]);
+    }
 
     lastPosition[0] = currentPosition[0];
     lastPosition[1] = currentPosition[1];
