@@ -44,9 +44,7 @@ function addShapeMethods(p) {
   // bake shape methods onto the resulting future
   shapeMethods.forEach(function(method) {
     p[method.name] = function() {
-
-      var s = future();
-
+      var s = future(true);
       s._shapeId = shapeId++;
 
       waitForArgs(varargs(arguments), function(e, resolvedArgs) {

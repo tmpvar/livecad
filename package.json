@@ -22,7 +22,7 @@
     "qel": "^1.0.0",
     "skateboard": "^0.2.9",
     "subdivide-arc": "^1.0.0",
-    "tmpvar-future": "^1.1.0",
+    "tmpvar-future": "^1.2.1",
     "tmpvar-future-wait": "^1.0.1",
     "workerify": "^0.3.0",
     "workerstream": "^1.2.1"
