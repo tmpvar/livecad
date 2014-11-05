@@ -2,11 +2,13 @@ var skateboard = require('skateboard');
 var generate = require('generate-function');
 var createClient = require('./client');
 var qel = require('qel');
+var detective = require('detective');
 
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
 var addHelperMesh = threedee.addHelperMesh;
 var clearHelperMeshes = threedee.clearHelperMeshes;
+var createBrowserifyBundle = require('./browserify');
 
 require('domready')(function() {
 
@@ -106,14 +108,14 @@ require('domready')(function() {
 
       var evilMethodUsage;
 
-      function evil (text) {
+      function evil (text, require) {
 
         try {
           var fn = generate()
             ('function(){')
               (header.join(';') + '\n')
               (text)
-            ('}').toFunction({ops:methods});
+            ('}').toFunction({ops:methods, require:require});
 
           wrapper(fn, function(e, usage) {
             evilMethodUsage = usage;
@@ -224,9 +226,8 @@ require('domready')(function() {
 
       });
 
-      jse.on('valid', function(valid) {
+      jse.on('valid', function(valid, ast) {
         typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
-
         var els = qel('.code-error-message', null, true), l = els.length;
         for (var i=0; i<l; i++) {
           els[i].parentNode.removeChild(els[i]);
@@ -236,10 +237,12 @@ require('domready')(function() {
           var text = jse.getValue();
           localStorage.setItem('text', text);
 
-          methods.reset(function() {
-            evil(text)
-            appendErrorLines();
-          });
+          createBrowserifyBundle(text, window.location.href + 'bundle', function(e, require) {
+            methods.reset(function() {
+              evil(text, require)
+              appendErrorLines();
+            });
+          })
         } else {
           appendErrorLines();
         }
