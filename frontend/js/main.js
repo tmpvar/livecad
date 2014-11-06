@@ -61,194 +61,196 @@ require('domready')(function() {
       }, 1000);
     });
 
-    createClient(stream, function(err, methods, wrapper) {
-      var header = Object.keys(methods).map(function(name) {
-        return 'var ' + name + ' = ' + 'ops.' + name + ';';
-      });
-
-      // hijack extract_verts
-      var _display = methods.display;
-      methods.display = function() {
-        typeof ga === 'function' && ga('send', 'event', 'net-oce', 'display', arguments.length);
-        var p = _display.apply(null, arguments)
-        p(function(e, r) {
-          if (e) {
-            // TODO: show an error
-            console.error('nothing to display');
-          } else {
-            setMesh(e, r);
-          }
+    stream.once('data', function(uuid) {
+      createClient(stream, function(err, methods, wrapper) {
+        var header = Object.keys(methods).map(function(name) {
+          return 'var ' + name + ' = ' + 'ops.' + name + ';';
         });
-        return p;
-      };
 
-      function appendErrorLines() {
-        if (jse.errorLines) {
-
-          var els = qel('.errorLine', null, true);
-
-          jse.errorLines.forEach(function(err, idx) {
-            var el = document.createElement('error');
-            el.setAttribute('class', 'code-error-message');
-            el.innerHTML = err.message.replace(/^Line \d*:/, '');
-            // TODO: position correctly
-            document.body.appendChild(el);
-
-            // find where the message should go
-            var errorLineElement = els[idx];
-
-            if (errorLineElement) {
-              var bounds = errorLineElement.getBoundingClientRect();
-              el.style.top = bounds.top + 'px';
-              el.style.left = (bounds.right - 1) + 'px';
+        // hijack extract_verts
+        var _display = methods.display;
+        methods.display = function() {
+          typeof ga === 'function' && ga('send', 'event', 'net-oce', 'display', arguments.length);
+          var p = _display.apply(null, arguments)
+          p(function(e, r) {
+            if (e) {
+              // TODO: show an error
+              console.error('nothing to display');
+            } else {
+              setMesh(e, r);
             }
           });
-        }
-      }
+          return p;
+        };
 
-      var evilMethodUsage;
+        function appendErrorLines() {
+          if (jse.errorLines) {
 
-      function evil (text, require) {
+            var els = qel('.errorLine', null, true);
 
-        try {
-          var fn = generate()
-            ('function(){')
-              (header.join(';') + '\n')
-              (text)
-            ('}').toFunction({ops:methods, require:require});
+            jse.errorLines.forEach(function(err, idx) {
+              var el = document.createElement('error');
+              el.setAttribute('class', 'code-error-message');
+              el.innerHTML = err.message.replace(/^Line \d*:/, '');
+              // TODO: position correctly
+              document.body.appendChild(el);
 
-          wrapper(fn, function(e, usage) {
-            evilMethodUsage = usage;
-          });
+              // find where the message should go
+              var errorLineElement = els[idx];
 
-        } catch (e) {
-          var matches = e.stack.match(/anonymous>:(\d*):(\d*)/);
-
-          if (matches) {
-            var lineNumber = parseInt(matches[1]) - 5;
-            jse.errorLines.push( {
-              num: lineNumber,
-              message: e.message,
-              col: parseInt(matches[2])
+              if (errorLineElement) {
+                var bounds = errorLineElement.getBoundingClientRect();
+                el.style.top = bounds.top + 'px';
+                el.style.left = (bounds.right - 1) + 'px';
+              }
             });
-            jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
           }
         }
-      }
 
-      jse.editor._handlers.change[0]();
+        var evilMethodUsage;
 
-      var codeMirrorEl = qel('.CodeMirror');
+        function evil (text, require) {
 
-      function getLine(span) {
-        var line = span.parentNode.parentNode;
-        var where = 0;
-        while(line.previousSibling) {
-          line = line.previousSibling;
-          where++;
-        }
-        return where;
-      }
+          try {
+            var fn = generate()
+              ('function(){')
+                (header.join(';') + '\n')
+                (text)
+              ('}').toFunction({ops:methods, require:require});
 
-      function getColumn(span) {
+            wrapper(fn, function(e, usage) {
+              evilMethodUsage = usage;
+            });
 
-        var c = 0;
-        var pre = span.parentNode;
-        var children = pre.childNodes;
+          } catch (e) {
+            var matches = e.stack.match(/anonymous>:(\d*):(\d*)/);
 
-        for (var i=0; i<children.length; i++) {
-          var child = children[i];
-          if (span === child) {
-            break;
+            if (matches) {
+              var lineNumber = parseInt(matches[1]) - 5;
+              jse.errorLines.push( {
+                num: lineNumber,
+                message: e.message,
+                col: parseInt(matches[2])
+              });
+              jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
+            }
           }
-          c += child.textContent.length;
         }
 
-        return c;
-      }
+        jse.editor._handlers.change[0]();
 
-      codeMirrorEl.addEventListener('mousemove', function(e) {
-        var el = e.target;
+        var codeMirrorEl = qel('.CodeMirror');
 
-        var hovered = qel('.hovered', codeMirrorEl, true);
-        var c = hovered.length;
-        var alreadyHovered = el.className.indexOf('hovered') > -1;
-        while(c--) {
-          if (hovered[c] === el) {
-            continue;
+        function getLine(span) {
+          var line = span.parentNode.parentNode;
+          var where = 0;
+          while(line.previousSibling) {
+            line = line.previousSibling;
+            where++;
           }
-          hovered[c].className = hovered[c].className.replace(/ *hovered */g, '');
+          return where;
         }
 
-        if (alreadyHovered) {
-          return;
+        function getColumn(span) {
+
+          var c = 0;
+          var pre = span.parentNode;
+          var children = pre.childNodes;
+
+          for (var i=0; i<children.length; i++) {
+            var child = children[i];
+            if (span === child) {
+              break;
+            }
+            c += child.textContent.length;
+          }
+
+          return c;
         }
 
-        clearHelperMeshes();
+        codeMirrorEl.addEventListener('mousemove', function(e) {
+          var el = e.target;
 
-        if (el.className.indexOf('variable') > -1 || el.className.indexOf('property') > -1) {
-          var name = el.textContent;
+          var hovered = qel('.hovered', codeMirrorEl, true);
+          var c = hovered.length;
+          var alreadyHovered = el.className.indexOf('hovered') > -1;
+          while(c--) {
+            if (hovered[c] === el) {
+              continue;
+            }
+            hovered[c].className = hovered[c].className.replace(/ *hovered */g, '');
+          }
 
-          if (methods[name]) {
-            var line = getLine(el);
-            var col = getColumn(el);
+          if (alreadyHovered) {
+            return;
+          }
 
-            if (evilMethodUsage && evilMethodUsage[line]) {
+          clearHelperMeshes();
 
-              var evilLine = evilMethodUsage[line];
+          if (el.className.indexOf('variable') > -1 || el.className.indexOf('property') > -1) {
+            var name = el.textContent;
 
-              // match with the text
-              for (var i=0; i<evilLine.length; i++) {
+            if (methods[name]) {
+              var line = getLine(el);
+              var col = getColumn(el);
 
-                if (Math.abs(evilLine[i]._column - col) <= 2) {
-                  var future = evilLine[i];
+              if (evilMethodUsage && evilMethodUsage[line]) {
 
-                  future(function(e, r) {
-                    if (!future._displayFuture) {
-                      typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
-                      future._displayFuture = _display(r);
-                    }
+                var evilLine = evilMethodUsage[line];
 
-                    // TODO: Allow more than one mesh to be rendered.
-                    future._displayFuture(addHelperMesh);
-                  });
+                // match with the text
+                for (var i=0; i<evilLine.length; i++) {
+
+                  if (Math.abs(evilLine[i]._column - col) <= 2) {
+                    var future = evilLine[i];
+
+                    future(function(e, r) {
+                      if (!future._displayFuture) {
+                        typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
+                        future._displayFuture = _display(r);
+                      }
+
+                      // TODO: Allow more than one mesh to be rendered.
+                      future._displayFuture(addHelperMesh);
+                    });
+                  }
                 }
               }
+
+              el.className += ' hovered';
             }
 
-            el.className += ' hovered';
           }
 
-        }
+          // TODO: consider allowing hover of lines
+          // TODO: consider hover of loops
 
-        // TODO: consider allowing hover of lines
-        // TODO: consider hover of loops
+        });
 
+        jse.on('valid', function(valid, ast) {
+          typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
+          var els = qel('.code-error-message', null, true), l = els.length;
+          for (var i=0; i<l; i++) {
+            els[i].parentNode.removeChild(els[i]);
+          }
+
+          if (valid) {
+            var text = jse.getValue();
+            localStorage.setItem('text', text);
+
+            createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(e, require) {
+              methods.reset(function() {
+                evil(text, require)
+                appendErrorLines();
+              });
+            })
+          } else {
+            appendErrorLines();
+          }
+        });
+
+        window.methods = methods;
       });
-
-      jse.on('valid', function(valid, ast) {
-        typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
-        var els = qel('.code-error-message', null, true), l = els.length;
-        for (var i=0; i<l; i++) {
-          els[i].parentNode.removeChild(els[i]);
-        }
-
-        if (valid) {
-          var text = jse.getValue();
-          localStorage.setItem('text', text);
-
-          createBrowserifyBundle(text, window.location.href + 'bundle', function(e, require) {
-            methods.reset(function() {
-              evil(text, require)
-              appendErrorLines();
-            });
-          })
-        } else {
-          appendErrorLines();
-        }
-      });
-
-      window.methods = methods;
     });
   });
 });
