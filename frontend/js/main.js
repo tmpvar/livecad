@@ -67,7 +67,7 @@ require('domready')(function() {
           return 'var ' + name + ' = ' + 'ops.' + name + ';';
         });
 
-        // hijack extract_verts
+        // hijack display
         var _display = methods.display;
         methods.display = function() {
           typeof ga === 'function' && ga('send', 'event', 'net-oce', 'display', arguments.length);
@@ -120,8 +120,8 @@ require('domready')(function() {
 
                 var leftBounds = jse.element.getBoundingClientRect();
                 el.style.left = (leftBounds.right - 6) + 'px';
-                console.log(err.num);
-                var lineWrapper = getLineByNumber(err.num);
+
+                var lineWrapper = getLineByNumber(err.lineNumber);
                 var linePre = qel('pre', lineWrapper);
 
                 var l = linePre.childNodes.length;
@@ -151,6 +151,8 @@ require('domready')(function() {
                       }
                     }
                   }
+                } else {
+                  console.error('unhandled syntax situation', err);
                 }
               }
             });
@@ -178,7 +180,7 @@ require('domready')(function() {
             if (matches) {
               var lineNumber = parseInt(matches[1]) - 5;
               jse.errorLines.push( {
-                num: lineNumber,
+                lineNumber: lineNumber,
                 message: e.message,
                 col: parseInt(matches[2])
               });
