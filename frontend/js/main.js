@@ -46,7 +46,7 @@ require('domready')(function() {
   var jse = require('javascript-editor')({
     container: qel('#editor'),
     value: value,
-    updateInterval:  0
+    updateInterval:  25
   });
 
   jse.editor.setCursor(0, 0);
@@ -126,26 +126,35 @@ require('domready')(function() {
 
                 var l = linePre.childNodes.length;
 
+                var find = null;
                 if (message.toLowerCase().indexOf('unexpected token') > -1) {
-                  var invalidToken = message.replace(/unexpected token/i, '').trim();
+                  find = message.replace(/unexpected token/i, '').trim();
+
+                } else if (message.toLowerCase.indexOf(' is not defined') > -1) {
+                  find = message.replace(/ is not defined/i, '').trim();
+                } else if (message.columnNumber) {
+//                  find = linePre.innerHTML.substr()
+                }
+
+                if (find) {
 
                   for (var i=0; i<l; i++) {
                     var child = linePre.childNodes.item(i);
-                    var index = child.textContent.indexOf(invalidToken);
+                    var index = child.textContent.indexOf(find);
                     if (index > -1) {
                       var span = document.createElement('span');
                       span.setAttribute('class', 'errorLoc');
 
                       // straight up replace the textNode
                       // handles things like `===` as well
-                      if (invalidToken.length === child.textContent.length) {
+                      if (find.length === child.textContent.length) {
                         wrap(span, child);
 
                       // split the text node
                       } else {
-                        var parts = child.textContent.split(invalidToken).filter(Boolean);
+                        var parts = child.textContent.split(find).filter(Boolean);
                         child.textContent = parts.shift();
-                        span.textContent = invalidToken;
+                        span.textContent = find;
                         insertAfter(child, span);
                         parts.length && insertAfter(span, document.createTextNode(parts.shift()));
                       }
@@ -178,11 +187,11 @@ require('domready')(function() {
             var matches = e.stack.match(/anonymous>:(\d*):(\d*)/);
 
             if (matches) {
-              var lineNumber = parseInt(matches[1]) - 5;
+              var lineNumber = parseInt(matches[1]) - 6;
               jse.errorLines.push( {
                 lineNumber: lineNumber,
                 message: e.message,
-                col: parseInt(matches[2])
+                column: parseInt(matches[2])
               });
               jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
             }
@@ -193,7 +202,7 @@ require('domready')(function() {
 
         var codeMirrorEl = qel('.CodeMirror');
         function getLineByNumber(num) {
-          return qel('.CodeMirror-lines div div:nth-of-type(3) div:nth-of-type(' + (num+1) + ')');
+          return qel('.CodeMirror-code div:nth-of-type(' + (num+1) + ')');
         }
 
         function getLine(span) {
