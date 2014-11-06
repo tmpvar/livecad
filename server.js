@@ -16,6 +16,11 @@ if (!argv.oce) {
 var port = parseInt(process.env.PORT || 9971, 10);
 function noop() {}
 
+var downgradeUser = 'livecad';
+if (port > 1000) {
+  downgradeUser = process.getuid();
+}
+
 skateboard({
   port : port,
   dir: path.join(__dirname, 'dist'),
@@ -69,30 +74,31 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
   req.pipe(concat(function(data) {
     var deps = JSON.parse(data.toString());
 
-    res.writeHead(200);
-    console.log('bundling deps:', deps);
+    var base = path.join(__dirname, 'tmp', params.uuid);
+    fs.stat(base, function statNpmInstallDir(e, r) {
+      if (e) {
+        res.writeHead(404);
+        res.end('sandbox not found');
+        return;
+      }
 
-    npm.load({}, function() {
-      var base = path.join(__dirname, 'tmp', params.uuid);
-      fs.stat(base, function statNpmInstallDir(e, r) {
+      res.writeHead(200);
+      var bundler = spawn('node', [
+        path.join(__dirname, 'bin', 'chroot-npm-install.js'),
+        '--dir=' + base,
+        '--user=' + downgradeUser,
+        '--deps=' + deps.join(',')
+      ], { stdio : 'pipe' });
 
-        if (e) {
-          res.writeHead(404);
-          res.end('sandbox not found');
-          return;
-        }
-
-        npm.commands.install(base, deps, function() {
-          var b = browserify([], {
-            basedir: base
-          });
-
-          deps.forEach(b.require.bind(b));
-
-          b.bundle().pipe(res);
-
+      bundler.on('exit', function() {
+        var b = browserify([], {
+          basedir: base
         });
+
+        deps.forEach(b.require.bind(b));
+        b.bundle().pipe(res);
       });
+
     });
   }));
 

@@ -8,3 +8,4 @@ dist
 static/bundle.js
 *.brep
 *.gcode
+tmp/*
