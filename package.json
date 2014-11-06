@@ -36,7 +36,8 @@
     "tmpvar-future-wait": "^1.0.1",
     "uuid": "^2.0.1",
     "workerify": "^0.3.0",
-    "workerstream": "^1.2.1"
+    "workerstream": "^1.2.1",
+    "codemirror-wrap-text" : "tmpvar/codemirror-wrap-text"
   },
   "devDependencies": {
     "gulp": "^3.8.7",

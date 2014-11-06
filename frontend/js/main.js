@@ -3,6 +3,7 @@ var generate = require('generate-function');
 var createClient = require('./client');
 var qel = require('qel');
 var detective = require('detective');
+var codemirrorWrapError = require('codemirror-wrap-text');
 
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
@@ -109,7 +110,7 @@ require('domready')(function() {
               el.setAttribute('class', 'code-error-message');
               var message = err.message.replace(/^Line \d*:/, '');
               el.innerHTML = message;
-              // TODO: position correctly
+
               document.body.appendChild(el);
               // find where the message should go
               var errorLineElement = els[idx];
@@ -122,47 +123,19 @@ require('domready')(function() {
                 el.style.left = (leftBounds.right - 6) + 'px';
 
                 var lineWrapper = getLineByNumber(err.lineNumber);
-                var linePre = qel('pre', lineWrapper);
+                var linePre = qel('pre span', lineWrapper);
 
-                var l = linePre.childNodes.length;
+                var span = document.createElement('span');
+                span.setAttribute('class', 'errorLoc');
 
-                var find = null;
+                var length = 1;
                 if (message.toLowerCase().indexOf('unexpected token') > -1) {
-                  find = message.replace(/unexpected token/i, '').trim();
-
-                } else if (message.toLowerCase.indexOf(' is not defined') > -1) {
-                  find = message.replace(/ is not defined/i, '').trim();
-                } else if (message.columnNumber) {
-//                  find = linePre.innerHTML.substr()
+                  length = message.replace(/unexpected token/i, '').trim().length;
+                } else if (message.toLowerCase().indexOf(' is not defined') > -1) {
+                  length = message.replace(/ is not defined/i, '').trim().length;
                 }
 
-                if (find) {
-
-                  for (var i=0; i<l; i++) {
-                    var child = linePre.childNodes.item(i);
-                    var index = child.textContent.indexOf(find);
-                    if (index > -1) {
-                      var span = document.createElement('span');
-                      span.setAttribute('class', 'errorLoc');
-
-                      // straight up replace the textNode
-                      // handles things like `===` as well
-                      if (find.length === child.textContent.length) {
-                        wrap(span, child);
-
-                      // split the text node
-                      } else {
-                        var parts = child.textContent.split(find).filter(Boolean);
-                        child.textContent = parts.shift();
-                        span.textContent = find;
-                        insertAfter(child, span);
-                        parts.length && insertAfter(span, document.createTextNode(parts.shift()));
-                      }
-                    }
-                  }
-                } else {
-                  console.error('unhandled syntax situation', err);
-                }
+                codemirrorWrapError(linePre, err.column-1, length, span);
               }
             });
           }
@@ -171,7 +144,6 @@ require('domready')(function() {
         var evilMethodUsage;
 
         function evil (text, require) {
-
           try {
             var fn = generate()
               ('function(){')
@@ -195,6 +167,8 @@ require('domready')(function() {
               });
               jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
             }
+
+            appendErrorLines();
           }
         }
 
@@ -305,7 +279,6 @@ require('domready')(function() {
             createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(e, require) {
               methods.reset(function() {
                 evil(text, require)
-                appendErrorLines();
               });
             })
           } else {
