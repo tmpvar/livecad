@@ -6,14 +6,14 @@
   min-width: 5em;
 
   color: #f8f8f2;
-  background: rgba(39, 40, 34, .66); 
+  background: rgba(39, 40, 34, .66);
   border-right: .4em solid rgba(39, 40, 34, 0);
 
   font-family: 'Inconsolata', 'Source Code Pro', 'Monaco', 'Consolas', monospace;
   line-height:1.5em !important;
 
   pre {
-    // Reset some styles that the rest of the page might have set 
+    // Reset some styles that the rest of the page might have set
     // todo: a lot of this is pretty superflous
     border-radius: 0;
     border-width: 0;
@@ -21,7 +21,7 @@
     font-family: inherit;
     font-size: inherit;
     margin: 0;
-    padding: 0 4px; // Horizontal padding of content 
+    padding: 0 4px; // Horizontal padding of content
     white-space: pre;
     word-wrap: normal;
     line-height: inherit;
@@ -31,17 +31,17 @@
     overflow: visible;
   }
 
-  // IE7 hack to prevent it from returning funny offsetTops on the spans 
+  // IE7 hack to prevent it from returning funny offsetTops on the spans
   span { *vertical-align: text-bottom; }
 
   &-scroll {
     overflow: hidden; // Set scrolling behaviour here
-    // 30px is the magic margin used to hide the element's real scrollbars 
-    // See overflow: hidden in .CodeMirror, and the paddings in &-sizer 
+    // 30px is the magic margin used to hide the element's real scrollbars
+    // See overflow: hidden in .CodeMirror, and the paddings in &-sizer
     margin-bottom: -30px; margin-right: -30px;
     padding-bottom: 30px; padding-right: 30px;
     height: 100%;
-    outline: none; // Prevent dragging from highlighting the element 
+    outline: none; // Prevent dragging from highlighting the element
     position: relative;
   }
 
@@ -51,7 +51,7 @@
   //
   // THEMEING - based on monokai theme
   //
-  
+
   &-selected { background: #49483e; }
   &-activeline-background { background: #373831;}
 
@@ -83,11 +83,11 @@
   .cm-builtin { color: #30a; }
 
   .cm-string { color: #e6db74; }
-  .cm-string-2 {color: #f50;} 
+  .cm-string-2 {color: #f50;}
 
   .cm-variable { color: #a6e22e; }
   .cm-variable-2 { color: #9effff; }
-  .cm-variable-3 {color: #085;} 
+  .cm-variable-3 {color: #085;}
 
   .cm-def { color: #fd971f; }
   .cm-bracket { color: #f8f8f2; }
@@ -103,7 +103,7 @@
   }
 
   //
-  // GUTTER 
+  // GUTTER
   //
 
   &-gutter {
@@ -113,7 +113,7 @@
     *zoom:1;
     *display:inline;
   }
-  &-gutters { 
+  &-gutters {
     background: rgba(39, 40, 34, .33);
     position: absolute; left: 0; top: 0;
     height: 100%;
@@ -133,15 +133,15 @@
   // CURSOR
   //
 
-  &-cursor { 
-    border-left: 1px solid #f8f8f0; 
-    border-right: none; 
-    position: absolute; 
-    visibility: hidden; 
-    width: 0; 
+  &-cursor {
+    border-left: 1px solid #f8f8f0;
+    border-right: none;
+    position: absolute;
+    visibility: hidden;
+    width: 0;
   }
 
-  // Shown when moving in bi-directional text 
+  // Shown when moving in bi-directional text
   &-secondarycursor { border-left: 1px solid silver; }
 
   &.cm-keymap-fat-cursor &-cursor {
@@ -159,13 +159,13 @@
 
   &-sizer { position: relative; }
 
-  // 
+  //
   // SCROLLBARS
   //
 
   // The fake, visible scrollbars. Used to force redraw during scrolling
   // before actuall scrolling happens, thus preventing shaking and
-  // flickering artifacts. 
+  // flickering artifacts.
   &-vscrollbar, &-hscrollbar, &-scrollbar-filler {
     position: absolute;
     z-index: 6;

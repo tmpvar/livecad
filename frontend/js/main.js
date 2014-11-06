@@ -83,7 +83,23 @@ require('domready')(function() {
           return p;
         };
 
+        function insertAfter(ref, add) {
+          var next = ref.nextSibling;
+          if (next) {
+            ref.parentNode.insertBefore(add, next);
+          } else {
+            ref.parentNode.appendChild(add);
+          }
+        }
+
+        function wrap(p, c) {
+          c.parentNode.replaceChild(p, c);
+          p.appendChild(c);
+          return p;
+        }
+
         function appendErrorLines() {
+
           if (jse.errorLines) {
 
             var els = qel('.errorLine', null, true);
@@ -91,17 +107,51 @@ require('domready')(function() {
             jse.errorLines.forEach(function(err, idx) {
               var el = document.createElement('error');
               el.setAttribute('class', 'code-error-message');
-              el.innerHTML = err.message.replace(/^Line \d*:/, '');
+              var message = err.message.replace(/^Line \d*:/, '');
+              el.innerHTML = message;
               // TODO: position correctly
               document.body.appendChild(el);
-
               // find where the message should go
               var errorLineElement = els[idx];
 
               if (errorLineElement) {
-                var bounds = errorLineElement.getBoundingClientRect();
-                el.style.top = bounds.top + 'px';
-                el.style.left = (bounds.right - 1) + 'px';
+                var topBounds = errorLineElement.getBoundingClientRect();
+                el.style.top = topBounds.top + 'px';
+
+                var leftBounds = jse.element.getBoundingClientRect();
+                el.style.left = (leftBounds.right - 6) + 'px';
+                console.log(err.num);
+                var lineWrapper = getLineByNumber(err.num);
+                var linePre = qel('pre', lineWrapper);
+
+                var l = linePre.childNodes.length;
+
+                if (message.toLowerCase().indexOf('unexpected token') > -1) {
+                  var invalidToken = message.replace(/unexpected token/i, '').trim();
+
+                  for (var i=0; i<l; i++) {
+                    var child = linePre.childNodes.item(i);
+                    var index = child.textContent.indexOf(invalidToken);
+                    if (index > -1) {
+                      var span = document.createElement('span');
+                      span.setAttribute('class', 'errorLoc');
+
+                      // straight up replace the textNode
+                      // handles things like `===` as well
+                      if (invalidToken.length === child.textContent.length) {
+                        wrap(span, child);
+
+                      // split the text node
+                      } else {
+                        var parts = child.textContent.split(invalidToken).filter(Boolean);
+                        child.textContent = parts.shift();
+                        span.textContent = invalidToken;
+                        insertAfter(child, span);
+                        parts.length && insertAfter(span, document.createTextNode(parts.shift()));
+                      }
+                    }
+                  }
+                }
               }
             });
           }
@@ -140,6 +190,9 @@ require('domready')(function() {
         jse.editor._handlers.change[0]();
 
         var codeMirrorEl = qel('.CodeMirror');
+        function getLineByNumber(num) {
+          return qel('.CodeMirror-lines div div:nth-of-type(3) div:nth-of-type(' + (num+1) + ')');
+        }
 
         function getLine(span) {
           var line = span.parentNode.parentNode;
