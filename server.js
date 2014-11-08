@@ -8,6 +8,7 @@ var concat = require('concat-stream');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var fs = require('fs');
+var async = require('async');
 
 if (!argv.oce) {
   return console.log('usage: livecad --oce=/path/to/net-oce');
@@ -82,43 +83,72 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
         return;
       }
 
-      var bundler = spawn('node', [
-        path.join(__dirname, 'bin', 'chroot-npm-install.js'),
-        '--dir=' + base,
-        '--user=' + downgradeUser,
-        '--deps=' + deps.join(',')
-      ], { stdio : 'pipe' });
-
-      bundler.on('exit', function() {
-        var b = browserify([], {
-          basedir: base
-        });
-
-        deps.forEach(b.require.bind(b));
-
-        b.bundle(function(e, r) {
-          if (e) {
-            var obj = {}
-            var notfound = e.message.match(/cannot find module '([^']*)'/i);
-            if (notfound) {
-              obj.module = notfound[1];
-            } else {
-              obj.message = e.message;
-            }
-
-            res.writeHead(404);
-            res.end(JSON.stringify(obj));
-          } else {
-            res.writeHead(200, {
-              'content-type' : 'text/javascript'
-            });
-            res.end(r);
-          }
-        });
-      });
+      async.filter(
+        deps,
+        function exists(file, cb) {
+          fs.stat(path.join(base, 'node_modules', file), function(e) {
+            cb(!!e); // keep the ones that don't exist
+          });
+        }, function(npmDeps) {
+          console.log(base, !!res, deps, npmDeps)
+          runBundler(base, res, deps, npmDeps)
+        }
+      );
     });
   }));
 });
+
+function runBundler(base, res, browserifyDeps, npmDeps) {
+  var bundleCacheFile = path.join(base, 'bundle.cache');
+
+  if (npmDeps.length) {
+
+    var bundler = spawn('node', [
+      path.join(__dirname, 'bin', 'chroot-npm-install.js'),
+      '--dir=' + base,
+      '--user=' + downgradeUser,
+      '--deps=' + npmDeps.join(',')
+    ], { stdio : 'pipe' });
+
+    bundler.on('exit', runBrowserify);
+  } else {
+    res.writeHead(200, {
+      'content-type' : 'text/javascript'
+    });
+
+    fs.createReadStream(bundleCacheFile).pipe(res);
+  }
+
+  function runBrowserify() {
+    var b = browserify([], {
+      basedir: base
+    });
+
+    browserifyDeps.forEach(b.require.bind(b));
+
+    b.bundle(function(e, r) {
+      if (e) {
+        var obj = {}
+        var notfound = e.message.match(/cannot find module '([^']*)'/i);
+        if (notfound) {
+          obj.module = notfound[1];
+        } else {
+          obj.message = e.message;
+        }
+
+        res.writeHead(404);
+        res.end(JSON.stringify(obj));
+      } else {
+        res.writeHead(200, {
+          'content-type' : 'text/javascript'
+        });
+        res.end(r);
+      }
+    }).pipe(fs.createWriteStream(bundleCacheFile))
+  }
+
+}
+
 
 function requestHandler(req, res) {
   var route = router.match(req.url);
