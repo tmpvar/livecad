@@ -296,8 +296,8 @@ require('domready')(function() {
                 if (e.start) {
                   var line = e.start.line - 1;
                   jse.marks.push(jse.editor.markText(
-                    { line: line, ch: e.start.column },
-                    { line: line, ch: e.end.column },
+                    { line: line, ch: e.start.column + 9 },
+                    { line: line, ch: e.end.column - 2 },
                     { className: 'errorLoc'}
                   ));
 
