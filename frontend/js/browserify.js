@@ -1,12 +1,28 @@
 var detective = require('detective');
 var request = require('hyperquest');
 var concat = require('concat-stream');
+var varargs = require('varargs');
 module.exports = attemptBrowserify;
 
-var cache;
-function attemptBrowserify(text, url, cb) {
+var cache = ''
+var cacheContents = [];
+function attemptBrowserify(text, url, cbResult) {
   var requires = detective(text);
   if (requires && requires.length) {
+
+
+    var newCache = requires.sort().join(',');
+
+    function cb() {
+      cacheContents = varargs(arguments);
+      cache = newCache;
+      cbResult.apply(null, cacheContents);
+    }
+
+    if (newCache === cache) {
+      cbResult.apply(null, cacheContents);
+      return;
+    }
 
     var req = request.post(url, {}, function(err, res) {
       res.pipe(concat(function(js) {

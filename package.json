@@ -35,6 +35,7 @@
     "tmpvar-future": "^1.2.1",
     "tmpvar-future-wait": "^1.0.1",
     "uuid": "^2.0.1",
+    "varargs": "^1.0.0",
     "workerify": "^0.3.0",
     "workerstream": "^1.2.1"
   },
