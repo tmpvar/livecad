@@ -3,7 +3,6 @@ var generate = require('generate-function');
 var createClient = require('./client');
 var qel = require('qel');
 var detective = require('detective');
-var codemirrorWrapError = require('codemirror-wrap-text');
 
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
@@ -50,6 +49,8 @@ require('domready')(function() {
     updateInterval:  25
   });
 
+  jse.marks = [];
+
   jse.editor.setCursor(0, 0);
 
   // fix "cursor is off the end of the line on last line" issue #29
@@ -83,21 +84,6 @@ require('domready')(function() {
           });
           return p;
         };
-
-        function insertAfter(ref, add) {
-          var next = ref.nextSibling;
-          if (next) {
-            ref.parentNode.insertBefore(add, next);
-          } else {
-            ref.parentNode.appendChild(add);
-          }
-        }
-
-        function wrap(p, c) {
-          c.parentNode.replaceChild(p, c);
-          p.appendChild(c);
-          return p;
-        }
 
         function appendErrorLines() {
 
@@ -135,7 +121,16 @@ require('domready')(function() {
                   length = message.replace(/ is not defined/i, '').trim().length;
                 }
 
-                codemirrorWrapError(linePre, err.column-1, length, span);
+                var mark = jse.editor.markText(
+                  { line: err.lineNumber, ch: err.column - 1 },
+                  { line: err.lineNumber, ch: err.column + length - 1 },
+                  {
+                    className : 'errorLoc'
+                  }
+                );
+
+                jse.marks.push(mark);
+
               }
             });
           }
@@ -271,6 +266,10 @@ require('domready')(function() {
           for (var i=0; i<l; i++) {
             els[i].parentNode.removeChild(els[i]);
           }
+
+          jse.marks.length && jse.marks.forEach(function(mark) {
+            mark.clear();
+          });
 
           if (valid) {
             var text = jse.getValue();
