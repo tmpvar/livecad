@@ -9,6 +9,7 @@
     ]
   },
   "dependencies": {
+    "async": "^0.9.0",
     "browser-filesaver": "^1.0.0",
     "browser-process-hrtime": "0.0.2",
     "browserify": "^6.2.0",
