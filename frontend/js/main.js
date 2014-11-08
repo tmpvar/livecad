@@ -175,7 +175,7 @@ require('domready')(function() {
         }
 
         function getLine(span) {
-          var line = span.parentNode.parentNode;
+          var line = span.parentNode.parentNode.parentNode;
           var where = 0;
           while(line.previousSibling) {
             line = line.previousSibling;
@@ -226,7 +226,6 @@ require('domready')(function() {
             if (methods[name]) {
               var line = getLine(el);
               var col = getColumn(el);
-
               if (evilMethodUsage && evilMethodUsage[line]) {
 
                 var evilLine = evilMethodUsage[line];
