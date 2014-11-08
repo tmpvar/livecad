@@ -56,6 +56,25 @@ require('domready')(function() {
   // fix "cursor is off the end of the line on last line" issue #29
   jse.editor.refresh();
 
+  function clearErrors() {
+    var els = qel('.code-error-message', null, true);
+    var i = els.length;
+    while (i--) {
+
+      els[i].parentNode.removeChild(els[i]);
+    }
+
+    while (jse.errorLines.length) {
+      var line = jse.errorLines.pop();
+      jse.editor.removeLineClass(line.lineNumber, 'background', 'errorLine');
+    }
+
+    while (jse.marks.length) {
+      jse.marks.pop().clear();
+    }
+  }
+
+
   skateboard(function(stream) {
     stream.socket.addEventListener('close', function() {
       setTimeout(function() {
@@ -261,20 +280,34 @@ require('domready')(function() {
 
         jse.on('valid', function(valid, ast) {
           typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
-          var els = qel('.code-error-message', null, true), l = els.length;
-          for (var i=0; i<l; i++) {
-            els[i].parentNode.removeChild(els[i]);
-          }
-
-          jse.marks.length && jse.marks.forEach(function(mark) {
-            mark.clear();
-          });
 
           if (valid) {
+            clearErrors();
+
             var text = jse.getValue();
             localStorage.setItem('text', text);
 
             createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(e, require) {
+              if (e) {
+                if (e.start) {
+                  var line = e.start.line - 1;
+                  jse.marks.push(jse.editor.markText(
+                    { line: line, ch: e.start.column },
+                    { line: line, ch: e.end.column },
+                    { className: 'errorLoc'}
+                  ));
+
+                  jse.errorLines.push( {
+                    lineNumber: line,
+                    message: "'" + e.module + "' not found",
+                  });
+
+                  jse.editor.addLineClass(line, 'background', 'errorLine' )
+                  appendErrorLines();
+                }
+                return;
+              }
+
               methods.reset(function() {
                 evil(text, require)
               });

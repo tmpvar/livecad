@@ -82,7 +82,6 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
         return;
       }
 
-      res.writeHead(200);
       var bundler = spawn('node', [
         path.join(__dirname, 'bin', 'chroot-npm-install.js'),
         '--dir=' + base,
@@ -96,12 +95,29 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
         });
 
         deps.forEach(b.require.bind(b));
-        b.bundle().pipe(res);
-      });
 
+        b.bundle(function(e, r) {
+          if (e) {
+            var obj = {}
+            var notfound = e.message.match(/cannot find module '([^']*)'/i);
+            if (notfound) {
+              obj.module = notfound[1];
+            } else {
+              obj.message = e.message;
+            }
+
+            res.writeHead(404);
+            res.end(JSON.stringify(obj));
+          } else {
+            res.writeHead(200, {
+              'content-type' : 'text/javascript'
+            });
+            res.end(r);
+          }
+        });
+      });
     });
   }));
-
 });
 
 function requestHandler(req, res) {
