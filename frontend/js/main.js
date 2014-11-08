@@ -135,7 +135,11 @@ require('domready')(function() {
 
                 var length = 1;
                 if (message.toLowerCase().indexOf('unexpected token') > -1) {
-                  length = message.replace(/unexpected token/i, '').trim().length;
+
+                  var message = message.replace(/unexpected token/i, '').trim();
+                  if (message !== 'ILLEGAL') {
+                    length = message.length;
+                  }
                 } else if (message.toLowerCase().indexOf(' is not defined') > -1) {
                   length = message.replace(/ is not defined/i, '').trim().length;
                 }
