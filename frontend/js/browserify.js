@@ -4,8 +4,27 @@ var concat = require('concat-stream');
 var varargs = require('varargs');
 module.exports = attemptBrowserify;
 
+
+function createError(text, moduleName) {
+  var found = detective.find(text, {
+    nodes: true,
+    parse: { tolerant: true, loc: true }
+  })
+
+  var strings = found.strings;
+  for (var i=0; i<strings.length; i++) {
+    if (strings[i] === moduleName) {
+      var obj = found.nodes[i].loc;
+      obj.module = moduleName;
+      return obj;
+    }
+  }
+  return moduleName;
+}
+
 var cache = ''
 var cacheContents = [];
+
 function attemptBrowserify(text, url, cbResult) {
   var requires = detective(text);
   if (requires && requires.length) {
@@ -20,6 +39,10 @@ function attemptBrowserify(text, url, cbResult) {
     }
 
     if (newCache === cache) {
+      if (cacheContents[0]) {
+        cacheContents[0] = createError(text, cacheContents[0].module);
+      }
+
       cbResult.apply(null, cacheContents);
       return;
     }
@@ -32,24 +55,8 @@ function attemptBrowserify(text, url, cbResult) {
           eval(js);
           cb(null, require);
         } else {
-          var found = detective.find(text, {
-            nodes: true,
-            parse: { tolerant: true, loc: true }
-          })
-
           var m = JSON.parse(js).module;
-
-          var strings = found.strings;
-          for (var i=0; i<strings.length; i++) {
-            if (strings[i] === m) {
-              var obj = found.nodes[i].loc;
-              obj.module = m;
-              return cb(obj);
-              break;
-            }
-          }
-
-          cb(m);
+          cb(createError(text, m));
         }
       }));
     });
