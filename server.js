@@ -9,6 +9,8 @@ var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var fs = require('fs');
 var async = require('async');
+var request = require('hyperquest');
+var concat = require('concat-stream');
 
 if (!argv.oce) {
   return console.log('usage: livecad --oce=/path/to/net-oce');
@@ -90,7 +92,6 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
             cb(!!e); // keep the ones that don't exist
           });
         }, function(npmDeps) {
-          console.log(base, !!res, deps, npmDeps)
           runBundler(base, res, deps, npmDeps)
         }
       );
@@ -103,14 +104,38 @@ function runBundler(base, res, browserifyDeps, npmDeps) {
 
   if (npmDeps.length) {
 
-    var bundler = spawn('node', [
-      path.join(__dirname, 'bin', 'chroot-npm-install.js'),
-      '--dir=' + base,
-      '--user=' + downgradeUser,
-      '--deps=' + npmDeps.join(',')
-    ], { stdio : 'pipe' });
+    request('http://npmsearch.com/exists?packages=' + npmDeps.join(',')).pipe(concat(function(d) {
+      var donotexist = [];
+      var existence = JSON.parse(d.toString());
 
-    bundler.on('exit', runBrowserify);
+      var toInstall = npmDeps.filter(function(dep, i) {
+        if (existence[i]) {
+          return true;
+        } else {
+          donotexist.push(dep);
+          return false;
+        }
+      })
+
+
+      var bundler = spawn('node', [
+        path.join(__dirname, 'bin', 'chroot-npm-install.js'),
+        '--dir=' + base,
+        '--user=' + downgradeUser,
+        '--deps=' + toInstall.join(',')
+      ], { stdio : 'pipe' });
+
+      if (!donotexist.length) {
+        bundler.on('exit', runBrowserify);
+      } else {
+        var obj = {
+          module : donotexist.join(',')
+        };
+
+        res.writeHead(404);
+        res.end(JSON.stringify(obj));
+      }
+    }));
   } else {
     res.writeHead(200, {
       'content-type' : 'text/javascript'
