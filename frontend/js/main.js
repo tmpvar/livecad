@@ -291,24 +291,28 @@ require('domready')(function() {
             var text = jse.getValue();
             localStorage.setItem('text', text);
 
-            createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(e, require) {
-              if (e) {
-                if (e.start) {
-                  var line = e.start.line - 1;
-                  jse.marks.push(jse.editor.markText(
-                    { line: line, ch: e.start.column + 9 },
-                    { line: line, ch: e.end.column - 2 },
-                    { className: 'errorLoc'}
-                  ));
+            createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(errors, require) {
+              if (errors) {
 
-                  jse.errorLines.push( {
-                    lineNumber: line,
-                    message: "'" + e.module + "' not found",
-                  });
+                // TODO: fix this hacky .reverse
+                errors.reverse().map(function(e) {
+                  if (e.start) {
+                    var line = e.start.line - 1;
+                    jse.marks.push(jse.editor.markText(
+                      { line: line, ch: e.start.column + 9 },
+                      { line: line, ch: e.end.column - 2 },
+                      { className: 'errorLoc'}
+                    ));
 
-                  jse.editor.addLineClass(line, 'background', 'errorLine' )
-                  appendErrorLines();
-                }
+                    jse.errorLines.push( {
+                      lineNumber: line,
+                      message: "'" + e.module + "' not found",
+                    });
+
+                    jse.editor.addLineClass(line, 'background', 'errorLine' )
+                  }
+                });
+                appendErrorLines();
                 return;
               }
 

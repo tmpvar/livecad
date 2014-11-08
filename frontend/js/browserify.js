@@ -55,8 +55,9 @@ function attemptBrowserify(text, url, cbResult) {
           eval(js);
           cb(null, require);
         } else {
-          var m = JSON.parse(js).module;
-          cb(createError(text, m));
+          cb(JSON.parse(js).module.split(',').map(function(m) {
+            return createError(text, m);
+          }));
         }
       }));
     });
