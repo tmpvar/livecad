@@ -4,6 +4,7 @@ var createClient = require('./client');
 var qel = require('qel');
 var detective = require('detective');
 var varargs = require('varargs');
+var Shape = require('./shape');
 
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
@@ -75,7 +76,6 @@ require('domready')(function() {
     }
   }
 
-
   skateboard(function(stream) {
     stream.socket.addEventListener('close', function() {
       setTimeout(function() {
@@ -87,6 +87,28 @@ require('domready')(function() {
       createClient(stream, function(err, methods, evalWrapper) {
         var header = Object.keys(methods).map(function(name) {
           return 'var ' + name + ' = ' + 'ops.' + name + ';';
+        });
+
+        // handle shape creation errors and other `net-oce`
+        // related explosions
+        Shape.emitter.on('error', function(e) {
+          if (e.shape) {
+            var line = e.shape.line;
+            var column = e.shape.column;
+
+            jse.errorLines.push( {
+              lineNumber: line,
+              message: e.message,
+              length: e.shape.name.length,
+              column: column
+            });
+
+            jse.editor.addLineClass(line, 'background', 'errorLine' )
+
+            appendErrorLines();
+          } else {
+            throw e;
+          }
         });
 
         // hijack display
@@ -103,7 +125,7 @@ require('domready')(function() {
             } else {
               setMesh(null, r);
             }
-          })
+          });
 
           _display.apply(null, args);
         };
@@ -125,6 +147,7 @@ require('domready')(function() {
               var errorLineElement = els[idx];
 
               if (errorLineElement) {
+
                 var topBounds = errorLineElement.getBoundingClientRect();
                 el.style.top = topBounds.top + 'px';
 
@@ -138,7 +161,9 @@ require('domready')(function() {
                 span.setAttribute('class', 'errorLoc');
 
                 var length = 1;
-                if (message.toLowerCase().indexOf('unexpected token') > -1) {
+                if (err.length) {
+                  length = err.length;
+                } else if (message.toLowerCase().indexOf('unexpected token') > -1) {
 
                   var message = message.replace(/unexpected token/i, '').trim();
                   if (message !== 'ILLEGAL') {
@@ -149,15 +174,14 @@ require('domready')(function() {
                 }
 
                 var mark = jse.editor.markText(
-                  { line: err.lineNumber, ch: err.column - 1 },
-                  { line: err.lineNumber, ch: err.column + length - 1 },
+                  { line: err.lineNumber, ch: err.column },
+                  { line: err.lineNumber, ch: err.column + length },
                   {
                     className : 'errorLoc'
                   }
                 );
 
                 jse.marks.push(mark);
-
               }
             });
           }
@@ -182,15 +206,18 @@ require('domready')(function() {
 
             if (matches) {
               var lineNumber = parseInt(matches[1]) - 6;
+              var column = parseInt(matches[2]);
+
               jse.errorLines.push( {
                 lineNumber: lineNumber,
                 message: e.message,
-                column: parseInt(matches[2])
+                column: column - 1
               });
-              jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
-            }
 
-            appendErrorLines();
+              jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
+
+              appendErrorLines();
+            }
           }
         }
 
@@ -275,11 +302,13 @@ require('domready')(function() {
 
         });
 
-        jse.on('valid', function(valid, ast) {
+        jse.on('update', function(errors, ast) {
           typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
 
-          if (valid) {
-            clearErrors();
+          clearErrors();
+
+          if (!errors) {
+
 
             var text = jse.getValue();
             localStorage.setItem('text', text);
@@ -291,18 +320,15 @@ require('domready')(function() {
                 errors.reverse().map(function(e) {
                   if (e.start) {
                     var line = e.start.line - 1;
-                    jse.marks.push(jse.editor.markText(
-                      { line: line, ch: e.start.column + 9 },
-                      { line: line, ch: e.end.column - 2 },
-                      { className: 'errorLoc'}
-                    ));
 
-                    jse.errorLines.push( {
+                    jse.errorLines.push({
                       lineNumber: line,
-                      message: "'" + e.module + "' not found",
+                      column: e.start.column,
+                      length: e.module.length,
+                      message: "'" + e.module + "' not found"
                     });
 
-                    jse.editor.addLineClass(line, 'background', 'errorLine' )
+                    jse.editor.addLineClass(line, 'background', 'errorLine');
                   }
                 });
                 appendErrorLines();
@@ -310,10 +336,23 @@ require('domready')(function() {
               }
 
               methods.reset(function() {
-                performEval(text, require)
+                performEval(text, require);
               });
-            })
+            });
           } else {
+            errors.forEach(function(e){
+              jse.errorLines.push( {
+                lineNumber: e.lineNumber,
+                column: e.column-3,
+                // TODO: this needs to be computed based
+                //       on the type of error
+                length: 1,
+                message: e.message
+              });
+
+              jse.editor.addLineClass(e.lineNumber, 'background', 'errorLine' );
+            });
+
             appendErrorLines();
           }
         });

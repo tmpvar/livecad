@@ -8,8 +8,11 @@ module.exports = createClient;
 
 var usage;
 
-function createShape() {
+function createShape(name, parent) {
   var shape = new Shape();
+
+  shape.name = name;
+  shape.parent = parent;
 
   var a = extractLocation();
   var line = a[0];
@@ -27,7 +30,15 @@ function createShape() {
   return shape;
 }
 
-function noop() {}
+function createNoop(shape) {
+
+  return function noop(e) {
+    if (e) {
+      e.shape = shape;
+      Shape.emitter.emit('error', e);
+    }
+  }
+}
 
 function evalWrapper(fn, cb) {
   usage = {};
@@ -35,10 +46,12 @@ function evalWrapper(fn, cb) {
   cb(null, usage);
 }
 
-function getCallbackOrNoop(argArray) {
-  var fn = noop;
+function getCallbackOrNoop(shape, argArray) {
+  var fn;
   if (typeof argArray[argArray.length-1] === 'function') {
     fn = argArray.pop();
+  } else {
+    fn = createNoop(shape);
   }
   return fn;
 }
@@ -62,8 +75,10 @@ function createClient(stream, fn) {
         // add shape operator <shape>.op() and commands.op(<shape>)
         commands[name] = Shape.prototype[name] = function shapeOperator() {
           var args = varargs(arguments);
-          var fn = getCallbackOrNoop(args);
-          var shape = createShape();
+          var shape = createShape(name, this.isShape ? this : null);
+          shape.name = name;
+
+          var fn = getCallbackOrNoop(shape, args);
 
           // this handles the cases:
           // shape.translate(...)
@@ -84,9 +99,9 @@ function createClient(stream, fn) {
 
       } else if (system === 'prim') {
         commands[name] = function shapeGenerator() {
-          var shape = createShape();
+          var shape = createShape(name);
           var args = varargs(arguments);
-          var fn = getCallbackOrNoop(args);
+          var fn = getCallbackOrNoop(shape, args);
 
           methods[method].call(shape, args, fn);
           return shape;
