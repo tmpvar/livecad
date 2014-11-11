@@ -109,15 +109,7 @@ function createClient(stream, fn) {
         };
 
       } else {
-        commands[name] = function unknownSystemMethod() {
-          var args = varargs(arguments);
-          var fn = noop;
-          if (typeof args[args.length-1] === 'function') {
-            fn = args.pop();
-          }
-
-          methods[method](args, fn);
-        };
+        commands[name] = methods[method];
       }
     });
 
