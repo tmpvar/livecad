@@ -97,7 +97,6 @@ require('domready')(function() {
           var args = varargs(arguments);
 
           args.push(function(e, r) {
-            console.log('display callback', e, r);
             if (e) {
               // TODO: show an error
               console.error('nothing to display');

@@ -101,10 +101,7 @@ function createClient(stream, fn) {
             fn = args.pop();
           }
 
-          methods[method].call(shape, args, function(e, r) {
-            console.log(method, e, r);
-            fn(e, r);
-          });
+          methods[method].call(shape, args, fn);
           return shape;
         };
 
