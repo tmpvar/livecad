@@ -32,7 +32,7 @@ function createShape() {
   return shape;
 }
 
-function noop() { console.log('NOOP', arguments); }
+function noop() {};
 
 function evalWrapper(fn, cb) {
   usage = {};
