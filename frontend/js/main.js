@@ -163,9 +163,9 @@ require('domready')(function() {
           }
         }
 
-        var evilMethodUsage;
+        var performEvalMethodUsage;
 
-        function evil (text, require) {
+        function performEval (text, require) {
           try {
             var fn = generate()
               ('function(){')
@@ -174,7 +174,7 @@ require('domready')(function() {
               ('}').toFunction({ops:methods, require:require});
 
             evalWrapper(fn, function(e, usage) {
-              evilMethodUsage = usage;
+              performEvalMethodUsage = usage;
             });
 
           } catch (e) {
@@ -254,14 +254,14 @@ require('domready')(function() {
               var line = getLine(el);
               var col = getColumn(el);
 
-              if (evilMethodUsage && evilMethodUsage[line]) {
-                var evilLine = evilMethodUsage[line];
+              if (performEvalMethodUsage && performEvalMethodUsage[line]) {
+                var performEvalLine = performEvalMethodUsage[line];
 
                 // match with the text
-                for (var i=0; i<evilLine.length; i++) {
-                  if (Math.abs(evilLine[i].column - col) <= 2) {
+                for (var i=0; i<performEvalLine.length; i++) {
+                  if (Math.abs(performEvalLine[i].column - col) <= 2) {
                     typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
-                    _display(evilLine[i], addHelperMesh);
+                    _display(performEvalLine[i], addHelperMesh);
                   }
                 }
               }
@@ -310,7 +310,7 @@ require('domready')(function() {
               }
 
               methods.reset(function() {
-                evil(text, require)
+                performEval(text, require)
               });
             })
           } else {
