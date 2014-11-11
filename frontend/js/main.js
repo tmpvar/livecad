@@ -3,6 +3,7 @@ var generate = require('generate-function');
 var createClient = require('./client');
 var qel = require('qel');
 var detective = require('detective');
+var varargs = require('varargs');
 
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
@@ -92,16 +93,20 @@ require('domready')(function() {
         var _display = methods.display;
         methods.display = function() {
           typeof ga === 'function' && ga('send', 'event', 'net-oce', 'display', arguments.length);
-          var p = _display.apply(null, arguments)
-          p(function(e, r) {
+
+          var args = varargs(arguments);
+
+          args.push(function(e, r) {
+            console.log('display callback', e, r);
             if (e) {
               // TODO: show an error
               console.error('nothing to display');
             } else {
-              setMesh(e, r);
+              setMesh(null, r);
             }
-          });
-          return p;
+          })
+
+          _display.apply(null, args);
         };
 
         function appendErrorLines() {
