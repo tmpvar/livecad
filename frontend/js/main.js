@@ -254,32 +254,21 @@ require('domready')(function() {
             if (methods[name]) {
               var line = getLine(el);
               var col = getColumn(el);
-              if (evilMethodUsage && evilMethodUsage[line]) {
 
+              if (evilMethodUsage && evilMethodUsage[line]) {
                 var evilLine = evilMethodUsage[line];
 
                 // match with the text
                 for (var i=0; i<evilLine.length; i++) {
-
-                  if (Math.abs(evilLine[i]._column - col) <= 2) {
-                    var future = evilLine[i];
-
-                    future(function(e, r) {
-                      if (!future._displayFuture) {
-                        typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
-                        future._displayFuture = _display(r);
-                      }
-
-                      // TODO: Allow more than one mesh to be rendered.
-                      future._displayFuture(addHelperMesh);
-                    });
+                  if (Math.abs(evilLine[i].column - col) <= 2) {
+                    typeof ga === 'function' && ga('send', 'event', 'shape', 'hover', arguments.length);
+                    _display(evilLine[i], addHelperMesh);
                   }
                 }
               }
 
               el.className += ' hovered';
             }
-
           }
 
           // TODO: consider allowing hover of lines
