@@ -1,7 +1,5 @@
 module.exports = Shape;
 
-var shapeId = 1;
-
 function Shape() {
   this.id = Shape.shapeId++;
 }
