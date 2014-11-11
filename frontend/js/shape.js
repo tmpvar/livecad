@@ -7,5 +7,7 @@ function Shape() {
 Shape.shapeId = 1;
 
 Shape.prototype.id = 0;
+Shape.prototype.line = 0;
+Shape.prototype.column = 0;
 
 // TODO: either extend from renderable or compose over one
