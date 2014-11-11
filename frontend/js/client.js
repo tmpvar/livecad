@@ -1,8 +1,3 @@
-
-// we're using promises to hide the mess that net-oce
-// causes and opt for potential future enhancements:
-//  - lazy evaluation
-//  - batching
 var oce = require('net-oce-protocol');
 var saveAs = require('browser-filesaver');
 var Shape = require('./shape');
@@ -32,7 +27,7 @@ function createShape() {
   return shape;
 }
 
-function noop() {};
+function noop() {}
 
 function evalWrapper(fn, cb) {
   usage = {};
@@ -40,8 +35,13 @@ function evalWrapper(fn, cb) {
   cb(null, usage);
 }
 
-var shapeMethods = [];
-var realized = 0;
+function getCallbackOrNoop(argArray) {
+  var fn = noop;
+  if (typeof argArray[argArray.length-1] === 'function') {
+    fn = argArray.pop();
+  }
+  return fn;
+}
 
 function createClient(stream, fn) {
 
@@ -59,47 +59,34 @@ function createClient(stream, fn) {
 
       if (system === 'op') {
 
-        // add shape operator <shape>.op()
-        Shape.prototype[name] = function shapeOperator() {
+        // add shape operator <shape>.op() and commands.op(<shape>)
+        commands[name] = Shape.prototype[name] = function shapeOperator() {
           var args = varargs(arguments);
-
-          var fn = noop;
-          if (typeof args[args.length-1] === 'function') {
-            fn = args.pop();
-          }
-
+          var fn = getCallbackOrNoop(args);
           var shape = createShape();
 
-          args.unshift(this);
+          // this handles the cases:
+          // shape.translate(...)
+          //   `this` is a shape so we add it to the args
+          //
+          // vs
+          //
+          // translate(shape, ...)
+          //   `this` is the `commands` object
+          //   `shape` is passed as an arg
+          //
+          this.isShape && args.unshift(this);
+
           methods[method].call(shape, args, fn);
 
           return shape;
         };
 
-        // add standalone operator
-        commands[name] = function standaloneShapeOperator() {
-          var args = varargs(arguments);
-
-          var fn = noop;
-          if (typeof args[args.length-1] === 'function') {
-            fn = args.pop();
-          }
-
-          var shape = createShape();
-          methods[method].call(shape, args, fn);
-
-          return shape;
-        }
-
       } else if (system === 'prim') {
         commands[name] = function shapeGenerator() {
           var shape = createShape();
-
           var args = varargs(arguments);
-          var fn = noop;
-          if (typeof args[args.length-1] === 'function') {
-            fn = args.pop();
-          }
+          var fn = getCallbackOrNoop(args);
 
           methods[method].call(shape, args, fn);
           return shape;
