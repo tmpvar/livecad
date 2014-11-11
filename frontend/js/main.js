@@ -84,7 +84,7 @@ require('domready')(function() {
     });
 
     stream.once('data', function(uuid) {
-      createClient(stream, function(err, methods, wrapper) {
+      createClient(stream, function(err, methods, evalWrapper) {
         var header = Object.keys(methods).map(function(name) {
           return 'var ' + name + ' = ' + 'ops.' + name + ';';
         });
@@ -173,7 +173,7 @@ require('domready')(function() {
                 (text)
               ('}').toFunction({ops:methods, require:require});
 
-            wrapper(fn, function(e, usage) {
+            evalWrapper(fn, function(e, usage) {
               evilMethodUsage = usage;
             });
 
