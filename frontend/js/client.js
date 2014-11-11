@@ -59,6 +59,7 @@ function createClient(stream, fn) {
 
       if (system === 'op') {
 
+        // add shape operator <shape>.op()
         Shape.prototype[name] = function shapeOperator() {
           var args = varargs(arguments);
 
@@ -74,6 +75,21 @@ function createClient(stream, fn) {
 
           return shape;
         };
+
+        // add standalone operator
+        commands[name] = function standaloneShapeOperator() {
+          var args = varargs(arguments);
+
+          var fn = noop;
+          if (typeof args[args.length-1] === 'function') {
+            fn = args.pop();
+          }
+
+          var shape = createShape();
+          methods[method].call(shape, args, fn);
+
+          return shape;
+        }
 
       } else if (system === 'prim') {
         commands[name] = function shapeGenerator() {
