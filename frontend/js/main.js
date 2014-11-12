@@ -45,7 +45,7 @@ require('domready')(function() {
   ].join('\n');
 
   // setup editor
-  var jse = require('javascript-editor')({
+  var jse = require('tmpvar-javascript-editor')({
     container: qel('#editor'),
     value: value,
     updateInterval:  25

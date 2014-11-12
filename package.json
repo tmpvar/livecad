@@ -57,7 +57,7 @@
     "duplexer": "^0.1.1",
     "tape": "^2.14.0",
     "generate-function": "^2.0.0",
-    "javascript-editor": "tmpvar/javascript-editor",
+    "tmpvar-javascript-editor": "tmpvar/javascript-editor",
     "orbit-camera": "^1.0.0",
     "net-oce-protocol": "git://github.com/solids/net-oce-protocol"
   }
