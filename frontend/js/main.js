@@ -12,6 +12,12 @@ var addHelperMesh = threedee.addHelperMesh;
 var clearHelperMeshes = threedee.clearHelperMeshes;
 var createBrowserifyBundle = require('./browserify');
 
+function contains(haystack, needle, caseSensitive) {
+  var h = (caseSensitive) ? haystack : haystack.toLowerCase();
+  var n = (caseSensitive) ? needle : needle.toLowerCase();
+  return h.indexOf(n) > -1;
+}
+
 require('domready')(function() {
 
   var value = localStorage.getItem('text') || [
@@ -96,6 +102,12 @@ require('domready')(function() {
             var line = e.shape.line;
             var column = e.shape.column;
 
+            // Fix odd case where the column is messed up
+            // on line 0.
+            if (line === 0) {
+              column -= 2;
+            }
+
             jse.errorLines.push( {
               lineNumber: line,
               message: e.message,
@@ -161,16 +173,11 @@ require('domready')(function() {
                 span.setAttribute('class', 'errorLoc');
 
                 var length = 1;
+
                 if (err.length) {
                   length = err.length;
-                } else if (message.toLowerCase().indexOf('unexpected token') > -1) {
-
-                  var message = message.replace(/unexpected token/i, '').trim();
-                  if (message !== 'ILLEGAL') {
-                    length = message.length;
-                  }
-                } else if (message.toLowerCase().indexOf(' is not defined') > -1) {
-                  length = message.replace(/ is not defined/i, '').trim().length;
+                } else if (contains(message, 'is not defined')) {
+                  length = message.split(' ').shift().trim().length;
                 }
 
                 var mark = jse.editor.markText(
@@ -207,6 +214,10 @@ require('domready')(function() {
             if (matches) {
               var lineNumber = parseInt(matches[1]) - 6;
               var column = parseInt(matches[2]);
+
+              if (lineNumber === 0) {
+                column -= 2;
+              }
 
               jse.errorLines.push( {
                 lineNumber: lineNumber,
@@ -308,8 +319,6 @@ require('domready')(function() {
           clearErrors();
 
           if (!errors) {
-
-
             var text = jse.getValue();
             localStorage.setItem('text', text);
 
@@ -320,7 +329,6 @@ require('domready')(function() {
                 errors.reverse().map(function(e) {
                   if (e.start) {
                     var line = e.start.line - 1;
-
                     jse.errorLines.push({
                       lineNumber: line,
                       column: e.start.column,
@@ -341,12 +349,30 @@ require('domready')(function() {
             });
           } else {
             errors.forEach(function(e){
+              var length = 1;
+              var message = e.message;
+              console.log('message', message);
+              // /TODO: this might not be granular enough
+              if (contains(message, 'invalid regular expression')) {
+                if (contains(message, ': missing')) {
+                  e.column -= 2;
+                }
+              } else if (contains(message, 'unexpected token')) {
+                message = message.split(' ').pop().trim();
+                if (message !== 'ILLEGAL') {
+                  length = message.length;
+                } else {
+                  e.column -= 1;
+                }
+              }
+
+
               jse.errorLines.push( {
                 lineNumber: e.lineNumber,
-                column: e.column-3,
+                column: e.column-1,
                 // TODO: this needs to be computed based
                 //       on the type of error
-                length: 1,
+                length: length,
                 message: e.message
               });
 
