@@ -11,6 +11,8 @@ var fs = require('fs');
 var async = require('async');
 var request = require('hyperquest');
 var concat = require('concat-stream');
+var url = require('url');
+var qs = require('querystring');
 
 if (!argv.oce) {
   return console.log('usage: livecad --oce=/path/to/net-oce');
@@ -97,6 +99,24 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
       );
     });
   }));
+});
+
+router.addRoute('/proxy*?', function(req, res, params) {
+  var parts = url.parse(req.url, true);
+  if (parts.query && parts.query.url && parts.query.url.indexOf('http') > -1) {
+    var target = url.parse(parts.query.url);
+    target = url.format(target);
+    var proxy = request(target);
+
+    proxy.on('error', function(e) {
+      console.log(e.stack);
+    });
+
+    req.pipe(proxy, { end: false }).pipe(res);
+  } else {
+    res.writeHead(400);
+    res.end('bad request');
+  }
 });
 
 function runBundler(base, res, browserifyDeps, npmDeps) {
