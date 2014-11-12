@@ -303,7 +303,7 @@ require('domready')(function() {
         });
 
         jse.on('update', function(errors, ast) {
-          typeof ga === 'function' && ga('send', 'event', 'editor', 'change', valid ? 'valid' : 'invalid');
+          typeof ga === 'function' && ga('send', 'event', 'editor', 'change', !errors.length ? 'valid' : 'invalid');
 
           clearErrors();
 
