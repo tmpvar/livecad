@@ -125,7 +125,7 @@ function setupRender(gl, shader) {
     fov,
     gl.canvas.width/gl.canvas.height,
     near,
-    far + Math.abs(camera.distance) + Math.abs(cameraDistance)
+    Number.MAX_SAFE_INTEGER
   );
 
   shader.uniforms.view = camera.view(scratch)
