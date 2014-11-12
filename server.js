@@ -12,7 +12,6 @@ var async = require('async');
 var request = require('hyperquest');
 var concat = require('concat-stream');
 var url = require('url');
-var qs = require('querystring');
 
 if (!argv.oce) {
   return console.log('usage: livecad --oce=/path/to/net-oce');
