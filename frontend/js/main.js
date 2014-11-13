@@ -331,7 +331,7 @@ require('domready')(function() {
                     var line = e.start.line - 1;
                     jse.errorLines.push({
                       lineNumber: line,
-                      column: e.start.column,
+                      column: e.start.column + 9,
                       length: e.module.length,
                       message: "'" + e.module + "' not found"
                     });
