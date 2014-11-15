@@ -54,6 +54,7 @@ function attemptBrowserify(text, url, cbResult) {
       headers : {
         'content-type' : 'application/json'
       },
+      timeout: 0,
       body: JSON.stringify(requires),
     }, function(err, res, body) {
 

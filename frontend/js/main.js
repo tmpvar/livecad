@@ -56,7 +56,7 @@ require('domready')(function() {
   var jse = require('tmpvar-javascript-editor')({
     container: qel('#editor'),
     value: value,
-    updateInterval:  25
+    updateInterval:  1000
   });
 
   jse.marks = [];

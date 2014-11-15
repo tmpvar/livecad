@@ -99,12 +99,20 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
   }));
 });
 
+
 router.addRoute('/proxy*?', function(req, res, params) {
   var parts = url.parse(req.url, true);
   if (parts.query && parts.query.url && parts.query.url.indexOf('http') > -1) {
-    var target = url.parse(parts.query.url);
-    target = url.format(target);
-    var proxy = request(target);
+    var target = parts.query.url.replace(':80', '');//unescape(parts.query.url);
+    console.log('proxy request to', target);
+
+    req.headers.host = parts.host;
+    var proxy = request(target, {
+      headers: req.headers
+    }, function(err, proxyRes) {
+
+      !err && res.writeHead(proxyRes.status || proxyRes.statusCode, proxyRes.headers);
+    });
 
     proxy.on('error', function(e) {
       console.log(e.stack);
