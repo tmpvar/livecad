@@ -63,6 +63,10 @@ require('domready')(function() {
 
   jse.editor.setCursor(0, 0);
 
+  jse.addError = function(err) {
+    jse.errorLines.push(err);
+  }
+
   // fix "cursor is off the end of the line on last line" issue #29
   jse.editor.refresh();
 
@@ -110,7 +114,7 @@ require('domready')(function() {
               column -= 2;
             }
 
-            jse.errorLines.push( {
+            jse.addError( {
               lineNumber: line,
               message: e.message,
               length: e.shape.name.length,
@@ -226,7 +230,7 @@ require('domready')(function() {
                 column -= 2;
               }
 
-              jse.errorLines.push( {
+              jse.addError( {
                 lineNumber: lineNumber,
                 message: e.message,
                 column: column - 1
@@ -336,7 +340,7 @@ require('domready')(function() {
                 errors.reverse().map(function(e) {
                   if (e.start) {
                     var line = e.start.line - 1;
-                    jse.errorLines.push({
+                    jse.addError({
                       lineNumber: line,
                       column: e.start.column + 9,
                       length: e.module.length,
@@ -374,7 +378,7 @@ require('domready')(function() {
               }
 
 
-              jse.errorLines.push( {
+              jse.addError( {
                 lineNumber: e.lineNumber,
                 column: e.column-1,
                 // TODO: this needs to be computed based
