@@ -141,6 +141,8 @@ require('domready')(function() {
             }
           });
 
+          clearErrors();
+
           _display.apply(null, args);
         };
 
@@ -151,16 +153,16 @@ require('domready')(function() {
             var els = qel('.errorLine', null, true);
 
             jse.errorLines.forEach(function(err, idx) {
-              var el = document.createElement('error');
-              el.setAttribute('class', 'code-error-message');
-              var message = err.message.replace(/^Line \d*:/, '');
-              el.innerHTML = message;
-
-              document.body.appendChild(el);
               // find where the message should go
               var errorLineElement = els[idx];
 
               if (errorLineElement) {
+                var el = document.createElement('error');
+                el.setAttribute('class', 'code-error-message');
+                var message = err.message.replace(/^Line \d*:/, '');
+                el.innerHTML = message;
+
+                document.body.appendChild(el);
 
                 var topBounds = errorLineElement.getBoundingClientRect();
                 el.style.top = topBounds.top + 'px';
@@ -191,6 +193,8 @@ require('domready')(function() {
                 );
 
                 jse.marks.push(mark);
+              } else {
+                console.error('error without line highlight:' + err.message);
               }
             });
           }
