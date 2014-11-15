@@ -85,10 +85,10 @@ require('domready')(function() {
   }
 
   skateboard(function(stream) {
-    stream.socket.addEventListener('close', function() {
-      setTimeout(function() {
-        window.location.reload();
-      }, 1000);
+
+    // treat reconnections as server reloads
+    stream.on('reconnect', function() {
+      window.location.reload();
     });
 
     stream.once('data', function(uuid) {
