@@ -36,7 +36,8 @@
     "uuid": "^2.0.1",
     "varargs": "^1.0.0",
     "workerify": "^0.3.0",
-    "workerstream": "^1.2.1"
+    "workerstream": "^1.2.1",
+    "xhr": "^1.17.0"
   },
   "devDependencies": {
     "gulp": "^3.8.7",

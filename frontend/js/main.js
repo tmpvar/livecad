@@ -1,3 +1,5 @@
+require('./monkey-patches/xhr');
+
 var skateboard = require('skateboard');
 var generate = require('generate-function');
 var createClient = require('./client');
@@ -197,12 +199,13 @@ require('domready')(function() {
         var performEvalMethodUsage;
 
         function performEval (text, require) {
+
           try {
             var fn = generate()
               ('function(){')
                 (header.join(';') + '\n')
                 (text)
-              ('}').toFunction({ops:methods, require:require});
+              ('}').toFunction({ops:methods, require:require });
 
             evalWrapper(fn, function(e, usage) {
               performEvalMethodUsage = usage;

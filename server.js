@@ -77,7 +77,6 @@ router.addRoute('/bundle/:uuid', function(req, res, params) {
 
   req.pipe(concat(function(data) {
     var deps = JSON.parse(data.toString());
-
     var base = path.join(__dirname, 'tmp', params.uuid);
     fs.stat(base, function statNpmInstallDir(e, r) {
       if (e) {

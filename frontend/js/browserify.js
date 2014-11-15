@@ -1,7 +1,8 @@
 var detective = require('detective');
-var request = require('hyperquest');
+var xhr = require('xhr');
 var concat = require('concat-stream');
 var varargs = require('varargs');
+
 module.exports = attemptBrowserify;
 
 
@@ -47,22 +48,31 @@ function attemptBrowserify(text, url, cbResult) {
       return;
     }
 
-    var req = request.post(url, {}, function(err, res) {
-      res.pipe(concat(function(js) {
-        js = js.toString();
-        if (res.statusCode === 200) {
-          var require = null;
-          eval(js);
-          cb(null, require);
-        } else {
-          cb(JSON.parse(js).module.split(',').map(function(m) {
-            return createError(text, m);
-          }));
-        }
-      }));
-    });
-    req.end(JSON.stringify(requires));
+    xhr({
+      uri: url,
+      method: 'POST',
+      headers : {
+        'content-type' : 'application/json'
+      },
+      body: JSON.stringify(requires),
+    }, function(err, res, body) {
 
+      if (err) {
+        return cbResult(err);
+      }
+
+      err && console.log(err.stack)
+      if (res.statusCode === 200) {
+        var js = res.responseText;
+        var require = null;
+        eval(js);
+        cb(null, require);
+      } else {
+        cb(JSON.parse(js).module.split(',').map(function(m) {
+          return createError(text, m);
+        }));
+      }
+    });
   } else {
     cb();
   }
