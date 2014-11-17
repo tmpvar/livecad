@@ -321,7 +321,7 @@ require('domready')(function() {
                       line: line,
                       column: e.start.column + 9,
                       length: e.module.length,
-                      message: "'" + e.module + "' not found"
+                      message: "not found"
                     });
                   }
                 });
