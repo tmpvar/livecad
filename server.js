@@ -143,13 +143,14 @@ function runBundler(base, res, browserifyDeps, npmDeps) {
         }
       })
 
-
-      var bundler = spawn('node', [
-        path.join(__dirname, 'bin', 'chroot-npm-install.js'),
-        '--dir=' + base,
-        '--user=' + downgradeUser,
-        '--deps=' + toInstall.join(',')
-      ], { stdio : 'pipe' });
+      if (toInstall.length) {
+        var bundler = spawn('node', [
+          path.join(__dirname, 'bin', 'chroot-npm-install.js'),
+          '--dir=' + base,
+          '--user=' + downgradeUser,
+          '--deps=' + toInstall.join(',')
+        ], { stdio : 'pipe' });
+      }
 
       if (!donotexist.length) {
         bundler.on('exit', runBrowserify);

@@ -305,7 +305,9 @@ require('domready')(function() {
 
             createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(errors, require) {
               if (errors) {
-
+                if (!Array.isArray(errors)) {
+                  errors = [errors];
+                }
                 // TODO: fix this hacky .reverse
                 errors.reverse().map(function(e) {
                   if (e.start) {
