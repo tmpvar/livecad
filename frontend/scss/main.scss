@@ -26,6 +26,10 @@ body { overflow: hidden; } // disable overscroll on osx
   margin-bottom:1px;
 }
 
+.CodeMirror-lineWidget div {
+  resize:none;
+}
+
 .errorLoc {
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
