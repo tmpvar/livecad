@@ -15,6 +15,7 @@ function createError(foundModules, moduleName) {
       return obj;
     }
   }
+
   return moduleName;
 }
 
@@ -22,11 +23,15 @@ var cache = ''
 var cacheContents = [];
 
 function attemptBrowserify(text, url, cbResult) {
-  var requires = detective(text);
-  if (requires && requires.length) {
 
+  var requires = detective.find(text, {
+    nodes: true,
+    parse: { tolerant: true, loc: true }
+  });
 
-    var newCache = requires.sort().join(',');
+  if (requires && requires.strings.length) {
+
+    var newCache = requires.strings.sort().join(',');
 
     function cb() {
       cacheContents = varargs(arguments);
@@ -36,10 +41,12 @@ function attemptBrowserify(text, url, cbResult) {
 
     if (newCache === cache) {
       if (cacheContents[0]) {
-        cacheContents[0] = createError(text, cacheContents[0].module);
+        cacheContents[0] = cacheContents[0].map(function(error) {
+          return createError(requires, error.module);
+        });
       }
 
-      cbResult.apply(null, cacheContents);
+      cbResult.apply(null, cacheContents.slice());
       return;
     }
 
@@ -50,7 +57,7 @@ function attemptBrowserify(text, url, cbResult) {
         'content-type' : 'application/json'
       },
       timeout: 0,
-      body: JSON.stringify(requires),
+      body: JSON.stringify(requires.strings),
     }, function(err, res, body) {
 
       if (err && err.statusCode !== 404) {
@@ -63,14 +70,11 @@ function attemptBrowserify(text, url, cbResult) {
         eval(js);
         cb(null, require);
       } else {
-        var foundModules = detective.find(text, {
-          nodes: true,
-          parse: { tolerant: true, loc: true }
+        var missing = JSON.parse(res.responseText).module.split(',').map(function(m) {
+          return createError(requires, m);
         });
 
-        cb(JSON.parse(res.responseText).module.split(',').map(function(m) {
-          return createError(foundModules, m);
-        }));
+        cb(missing);
       }
     });
   } else {

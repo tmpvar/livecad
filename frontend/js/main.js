@@ -304,6 +304,11 @@ require('domready')(function() {
             localStorage.setItem('text', text);
 
             createBrowserifyBundle(text, window.location.href + 'bundle/' + uuid, function(errors, require) {
+
+              if (!errors && !require) {
+                debugger;
+              }
+
               if (errors) {
                 if (!Array.isArray(errors)) {
                   errors = [errors];
