@@ -64,7 +64,45 @@ require('domready')(function() {
   jse.editor.setCursor(0, 0);
 
   jse.addError = function(err) {
-    jse.errorLines.push(err);
+    var length = 1;
+    var message = err.message;
+    if (err.length) {
+      length = err.length;
+    } else if (contains(message, 'is not defined')) {
+      length = message.split(' ').shift().trim().length;
+      message = 'not defined';
+    }
+
+    var el = document.createElement('div');
+    el.setAttribute('class', 'code-error-message');
+    el.innerHTML = '<div class="arrow-down"></div>' + message.replace(/^Line \d*:/, '');
+
+    var placeholder = document.createElement('div');
+    placeholder.innerHTML = '&nbsp;';
+    jse.marks.push(jse.editor.addLineWidget(err.line, placeholder, {
+      coverGutter: false,
+      noHScroll: false,
+      above: true
+    }));
+
+    jse.editor.addWidget({ line: err.line, ch: err.column}, el, false, 'above');
+
+    jse.marks.push({
+      clear : function() {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      }
+    });
+
+    var mark = jse.editor.markText(
+      { line: err.line, ch: err.column },
+      { line: err.line, ch: err.column + length },
+      {
+        className : 'errorLoc'
+      }
+    );
+    jse.marks.push(mark);
   }
 
   // fix "cursor is off the end of the line on last line" issue #29
@@ -74,13 +112,7 @@ require('domready')(function() {
     var els = qel('.code-error-message', null, true);
     var i = els.length;
     while (i--) {
-
       els[i].parentNode.removeChild(els[i]);
-    }
-
-    while (jse.errorLines.length) {
-      var line = jse.errorLines.pop();
-      jse.editor.removeLineClass(line.lineNumber, 'background', 'errorLine');
     }
 
     while (jse.marks.length) {
@@ -115,15 +147,11 @@ require('domready')(function() {
             }
 
             jse.addError( {
-              lineNumber: line,
+              line: line,
               message: e.message,
               length: e.shape.name.length,
               column: column
             });
-
-            jse.editor.addLineClass(line, 'background', 'errorLine' )
-
-            appendErrorLines();
           } else {
             throw e;
           }
@@ -149,60 +177,6 @@ require('domready')(function() {
 
           _display.apply(null, args);
         };
-
-        function appendErrorLines() {
-
-          if (jse.errorLines) {
-
-            var els = qel('.errorLine', null, true);
-
-            jse.errorLines.forEach(function(err, idx) {
-              // find where the message should go
-              var errorLineElement = els[idx];
-
-              if (errorLineElement) {
-                var el = document.createElement('error');
-                el.setAttribute('class', 'code-error-message');
-                var message = err.message.replace(/^Line \d*:/, '');
-                el.innerHTML = message;
-
-                document.body.appendChild(el);
-
-                var topBounds = errorLineElement.getBoundingClientRect();
-                el.style.top = topBounds.top + 'px';
-
-                var leftBounds = jse.element.getBoundingClientRect();
-                el.style.left = (leftBounds.right - 6) + 'px';
-
-                var lineWrapper = getLineByNumber(err.lineNumber);
-                var linePre = qel('pre span', lineWrapper);
-
-                var span = document.createElement('span');
-                span.setAttribute('class', 'errorLoc');
-
-                var length = 1;
-
-                if (err.length) {
-                  length = err.length;
-                } else if (contains(message, 'is not defined')) {
-                  length = message.split(' ').shift().trim().length;
-                }
-
-                var mark = jse.editor.markText(
-                  { line: err.lineNumber, ch: err.column },
-                  { line: err.lineNumber, ch: err.column + length },
-                  {
-                    className : 'errorLoc'
-                  }
-                );
-
-                jse.marks.push(mark);
-              } else {
-                console.error('error without line highlight:' + err.message);
-              }
-            });
-          }
-        }
 
         var performEvalMethodUsage;
 
@@ -231,14 +205,10 @@ require('domready')(function() {
               }
 
               jse.addError( {
-                lineNumber: lineNumber,
+                line: lineNumber,
                 message: e.message,
                 column: column - 1
               });
-
-              jse.editor.addLineClass(lineNumber, 'background', 'errorLine' )
-
-              appendErrorLines();
             }
           }
         }
@@ -324,10 +294,10 @@ require('domready')(function() {
 
         });
 
+        jse.on('change', clearErrors);
+
         jse.on('update', function(errors, ast) {
           typeof ga === 'function' && ga('send', 'event', 'editor', 'change', errors ? 'valid' : 'invalid');
-
-          clearErrors();
 
           if (!errors) {
             var text = jse.getValue();
@@ -341,16 +311,13 @@ require('domready')(function() {
                   if (e.start) {
                     var line = e.start.line - 1;
                     jse.addError({
-                      lineNumber: line,
+                      line: line,
                       column: e.start.column + 9,
                       length: e.module.length,
                       message: "'" + e.module + "' not found"
                     });
-
-                    jse.editor.addLineClass(line, 'background', 'errorLine');
                   }
                 });
-                appendErrorLines();
                 return;
               }
 
@@ -362,7 +329,7 @@ require('domready')(function() {
             errors.forEach(function(e){
               var length = 1;
               var message = e.message;
-              console.log('message', message);
+
               // /TODO: this might not be granular enough
               if (contains(message, 'invalid regular expression')) {
                 if (contains(message, ': missing')) {
@@ -379,18 +346,14 @@ require('domready')(function() {
 
 
               jse.addError( {
-                lineNumber: e.lineNumber,
+                line: e.lineNumber,
                 column: e.column-1,
                 // TODO: this needs to be computed based
                 //       on the type of error
                 length: length,
                 message: e.message
               });
-
-              jse.editor.addLineClass(e.lineNumber, 'background', 'errorLine' );
             });
-
-            appendErrorLines();
           }
         });
 
