@@ -127,7 +127,7 @@ router.addRoute('/proxy*?', function(req, res, params) {
 
 function runBundler(base, res, browserifyDeps, npmDeps) {
   var bundleCacheFile = path.join(base, 'bundle.cache');
-
+  var npmStart = Date.now();
   if (npmDeps.length) {
 
     request('http://npmsearch.com/exists?packages=' + npmDeps.join(',')).pipe(concat(function(d) {
@@ -172,12 +172,15 @@ function runBundler(base, res, browserifyDeps, npmDeps) {
   }
 
   function runBrowserify() {
+    console.log('npm install of', browserifyDeps.join(','), 'took', Date.now() - npmStart, 'ms');
+
     var b = browserify([], {
       basedir: base
     });
 
     browserifyDeps.forEach(b.require.bind(b));
 
+    var start = Date.now();
     b.bundle(function(e, r) {
       if (e) {
         var obj = {}
@@ -196,7 +199,11 @@ function runBundler(base, res, browserifyDeps, npmDeps) {
         });
         res.end(r);
       }
-    }).pipe(fs.createWriteStream(bundleCacheFile))
+    })
+    .on('end', function() {
+      console.log('browserify of', browserifyDeps.join(','), 'took', Date.now() - start, 'ms');
+    })
+    .pipe(fs.createWriteStream(bundleCacheFile))
   }
 
 }
