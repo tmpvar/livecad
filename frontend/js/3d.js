@@ -14,6 +14,8 @@ var Renderable = require('./renderable');
 var hsl = require('./hsl');
 var lerpCameraTo = require('./lerp-camera-to');
 
+// mouse picking state
+var pickedIndex = -1, pickedFeatureIndex = -1;
 var pickMouse = require('./picker');
 
 module.exports = {
@@ -213,25 +215,35 @@ function handleMouse(ev) {
     break;
 
     case 'mousedown':
+
       down = true;
       transformMouse(ev, lastPosition);
       renderDebouncer();
+
+    break;
+
+    case 'mouseup':
+      down = false;
+      transformMouse(ev, lastPosition);
+      renderDebouncer();
+
+      // TODO: only re-center camera if the camera
+      //       was not rotated during the mousedown
+      //       period
+      if (pickedIndex > -1 && pickedFeatureIndex > -1) {
+        var feature = renderables[pickedIndex].features[pickedFeatureIndex];
+        var center = feature.center;
+        cameraCenter[0] = center[0];
+        cameraCenter[1] = center[1];
+        cameraCenter[2] = center[2];
+      }
     break;
   }
 }
 
-['mousedown', 'click', 'mousewheel'].forEach(function(name) {
+['mousedown', 'mouseup', 'click', 'mousewheel'].forEach(function(name) {
   gl.canvas.addEventListener(name, handleMouse, true);
 });
-
-document.addEventListener('mouseup', function(ev) {
-  renderDebouncer();
-  resetMousePicks();
-  down = false;
-});
-
-// mouse picking state
-var pickedIndex = -1, pickedFeatureIndex = -1;
 
 function resetMousePicks() {
   if (pickedIndex > -1 && pickedFeatureIndex > -1) {

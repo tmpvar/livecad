@@ -8,6 +8,43 @@ var mat4 = glm.mat4;
 var vec3 = glm.vec3;
 var quat = glm.quat;
 
+function createAABB() {
+  var aabb = [
+    [Infinity, Infinity, Infinity],
+    [-Infinity, -Infinity, -Infinity],
+  ]
+
+  return function checkAABB(point) {
+    if (!point) {
+      return aabb;
+    }
+
+    if (point[0] < aabb[0][0]) {
+      aabb[0][0] = point[0];
+    }
+
+    if (point[1] < aabb[0][1]) {
+      aabb[0][1] = point[1];
+    }
+
+    if (point[2] < aabb[0][2]) {
+      aabb[0][2] = point[2];
+    }
+
+    if (point[0] > aabb[1][0]) {
+      aabb[1][0] = point[0];
+    }
+
+    if (point[1] > aabb[1][1]) {
+      aabb[1][1] = point[1];
+    }
+
+    if (point[2] > aabb[1][2]) {
+      aabb[1][2] = point[1];
+    }
+  }
+}
+
 // TODO: ripped from a later version of gl-matrix
 quat.rotationTo = (function() {
   var tmpvec3 = vec3.create();
@@ -169,19 +206,27 @@ function Renderable(gl, obj) {
   }
 
   var features = [];
+  var positions = obj.positions;
+  var pscratch = [0, 0, 0];
   for (var j = 0; j<featureCounts.length; j++) {
     var cur = featureCounts[j];
     var featureArray = Array(cur.length * 3);
-
+    var aabb = createAABB();
     for (var k = 0; k<cur.length; k++) {
       var k3 = k*3;
       var ck3 = cur[k] * 3;
       featureArray[k3 + 0] = ck3 + 0;
       featureArray[k3 + 1] = ck3 + 1;
       featureArray[k3 + 2] = ck3 + 2;
+
+      pscratch[0] = positions[ck3 + 0];
+      pscratch[1] = positions[ck3 + 1];
+      pscratch[2] = positions[ck3 + 2];
+
+      aabb(pscratch);
     }
 
-    features.push(new Feature(gl, attributes, featureArray));
+    features.push(new Feature(gl, attributes, featureArray, aabb()));
   }
 
   this.features = features;
@@ -253,8 +298,10 @@ Edge.prototype.render = function(gl, shader, color, disableDepth) {
   shader.uniforms.moveTowardCamera = 0;
 }
 
-function Feature(gl, attributes, elements) {
+function Feature(gl, attributes, elements, aabb) {
   this.total = elements.length;
+  this.aabb = aabb;
+
   this.buffers = [
     createBuffer(gl, elements, gl.ELEMENT_ARRAY_BUFFER),
     createBuffer(gl, elements.slice().reverse(), gl.ELEMENT_ARRAY_BUFFER)
@@ -264,6 +311,13 @@ function Feature(gl, attributes, elements) {
     createVAO(gl, attributes, this.buffers[0]),
     createVAO(gl, attributes, this.buffers[1])
   ];
+
+  this.center = [
+    (aabb[1][0] - aabb[0][0])/2 + aabb[0][0],
+    (aabb[1][1] - aabb[0][1])/2 + aabb[0][1],
+    (aabb[1][2] - aabb[0][2])/2 + aabb[0][2]
+  ];
+
 };
 
 Feature.prototype.destroy = function() {
