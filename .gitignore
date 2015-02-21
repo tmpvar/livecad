@@ -9,3 +9,4 @@ static/bundle.js
 *.brep
 *.gcode
 tmp/*
+**/.DS_Store

@@ -6,7 +6,7 @@ var gulp = require('gulp')
     , dist: './dist/'
     , frontend: {
         // html top level in directory only
-        html: './frontend/*.html'
+        html: ['./frontend/*.html', './frontend/*.ico']
 
       , resources: './frontend/resources/**/*'
 
@@ -68,6 +68,6 @@ gulp.task('watch', ['html', 'styles', 'scripts', 'resources'], function (cb) {
 })
 
 // TODO: create full dist builds
-gulp.task('build', ['html', 'styles', 'scripts', 'resources'], function () {})
+gulp.task('build', ['html', 'styles', 'scripts', 'resources', 'favicon'], function () {})
 
 gulp.task('default', ['watch'])
