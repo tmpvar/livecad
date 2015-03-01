@@ -7,18 +7,14 @@ var qel = require('qel');
 var detective = require('detective');
 var varargs = require('varargs');
 var Shape = require('./shape');
-
+var contains = require('./contains');
 var threedee = require('./3d');
 var setMesh = threedee.setMesh;
 var addHelperMesh = threedee.addHelperMesh;
 var clearHelperMeshes = threedee.clearHelperMeshes;
 var createBrowserifyBundle = require('./browserify');
 
-function contains(haystack, needle, caseSensitive) {
-  var h = (caseSensitive) ? haystack : haystack.toLowerCase();
-  var n = (caseSensitive) ? needle : needle.toLowerCase();
-  return h.indexOf(n) > -1;
-}
+
 
 require('domready')(function() {
 

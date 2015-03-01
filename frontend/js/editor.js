@@ -1,6 +1,6 @@
 var createCodemirror = require('tmpvar-javascript-editor')
 var qel = require('qel');
-
+var contains = require('./contains');
 module.exports = createEditor;
 
 
