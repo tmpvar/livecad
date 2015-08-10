@@ -78,6 +78,6 @@ function attemptBrowserify(text, url, cbResult) {
       }
     });
   } else {
-    cb();
+    cbResult.apply(varargs(arguments));
   }
 }
